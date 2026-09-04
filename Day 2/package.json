@@ -1,0 +1,12 @@
+{
+  "name": "cursor-cloud-min",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.30"
+  }
+}
