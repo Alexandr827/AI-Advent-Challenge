@@ -1120,10 +1120,12 @@ src/
   tokens.js     # оценка, лимит окна, форматирование usage
   store.js      # JSON-хранилище истории, facts, веток, memory, задачи и usage
   env.js        # загрузка .env
+data/
+  agents.json, invariants.json, profiles/, *-benchmark.json — примеры и артефакты прогонов
 .env.example
 ```
 
-Локально при работе агенты пишут состояние в `data/agents.json`, профили — в `data/profiles/`, инварианты — в `data/invariants.json` (папка `data/` в `.gitignore`, в публичный репозиторий не попадает).
+При работе агенты пишут состояние в `data/agents.json`, профили — в `data/profiles/`, инварианты — в `data/invariants.json`. В репозитории Day 14 папка `data/` включена (примеры профилей, инвариантов и артефакты бенчмарков; без секретов). В локальном `.gitignore` корня проекта `data/` по-прежнему исключена.
 
 ## Примечания
 
