@@ -1,0 +1,13 @@
+---
+description: "Constraints rules for user marie"
+alwaysApply: true
+kind: constraints
+user: marie
+---
+
+# Constraints
+
+- stack: python + FastAPI
+- architecture: microservices
+- dependencies: можно зрелые библиотеки
+- apis: допустимы платные облачные api

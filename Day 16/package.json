@@ -1,0 +1,16 @@
+{
+  "name": "cursor-cloud-min",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "mcp:tools": "node src/mcp-client.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.30",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.6.5"
+  }
+}

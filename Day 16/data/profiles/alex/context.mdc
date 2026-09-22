@@ -1,0 +1,13 @@
+---
+description: "Context rules for user alex"
+alwaysApply: true
+kind: context
+user: alex
+---
+
+# Context
+
+- role: senior fullstack nodeJS dev
+- project: сервис для запуска исполняемых bpmn-процессов
+- team: 3 человека
+- deadline: 3 недели
