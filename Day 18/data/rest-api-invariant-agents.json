@@ -1,0 +1,86 @@
+{
+  "nextId": 2,
+  "agents": [
+    {
+      "id": "1",
+      "name": "helper",
+      "model": "composer-2.5",
+      "systemPrompt": "Отвечай по-русски, кратко, на уровне проектирования. Не пиши полные реализации.",
+      "runtime": "local",
+      "sdkAgentId": "agent-69315bef-1cdb-4eb2-b37a-53ce54e8c47a",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Спроектируй мне REST API",
+          "ts": 1789758291844
+        },
+        {
+          "role": "assistant",
+          "content": "Нарушение инварианта Architecture: MVVM. Такое решение предлагать нельзя. Если запрос требует нарушения — откажитесь и предложите совместимый вариант.",
+          "ts": 1789758291844
+        },
+        {
+          "role": "user",
+          "content": "Давай сделаем это на C# и ASP.NET",
+          "ts": 1789758294795
+        },
+        {
+          "role": "assistant",
+          "content": "**Отказ:** инвариант **Stack: NodeJS, JavaScript** — переход на C# / ASP.NET **запрещён**. Предлагать ASP.NET как альтернативу тоже нельзя.\n\n**Совместимый вариант:** тот же REST + MVVM, но на Node.js:\n\n- **View** — Express или Fastify (маршруты, middleware, JSON).\n- **ViewModel** — классы/функции сценариев + DTO; вход уже провалидирован (например, Zod).\n- **Model** — ваши `store`, `memory`, `task`, `agent`, `profile`.\n\nСтруктура: `src/api/view/` (routes), `src/api/viewmodels/`, модель без изменений по смыслу. REST `/api/v1`, без GraphQL, внешние API — только бесплатные, зависимостей не больше 5.\n\nЕсли нужно «ощущение ASP.NET» в Node — можно взять **Fastify** + явные контроллеры (тонкий View) и отдельные ViewModel-сервисы; архитектура остаётся MVVM, стек — JavaScript.\n\nМогу следующим сообщением расписать только каркас папок и контракты эндпоинтов под ваш репозиторий.",
+          "ts": 1789758294795
+        }
+      ],
+      "compress": false,
+      "compressEvery": 4,
+      "summary": "",
+      "summarizedCount": 0,
+      "usage": {
+        "inputTokens": 28677,
+        "outputTokens": 3347,
+        "cacheReadTokens": 6752,
+        "cacheWriteTokens": 0,
+        "totalTokens": 38776,
+        "reasoningTokens": 0
+      },
+      "lastTurn": {
+        "requestEstimated": 181,
+        "requestBilled": 5420,
+        "responseEstimated": 220,
+        "responseBilled": 408,
+        "billedReported": true
+      },
+      "contextLimit": null,
+      "strategy": "full",
+      "window": 8,
+      "facts": {},
+      "memory": {
+        "short": {
+          "entries": {}
+        },
+        "working": {
+          "task": "",
+          "entries": {},
+          "machine": {
+            "task": "",
+            "state": "planning",
+            "step": 0,
+            "total": 0,
+            "plan": [],
+            "done": [],
+            "current": ""
+          }
+        },
+        "long": {
+          "profile": {},
+          "decisions": {},
+          "knowledge": {}
+        }
+      },
+      "profileId": "",
+      "invariantSetId": "bpmn",
+      "checkpoint": null,
+      "branches": null,
+      "currentBranch": null
+    }
+  ]
+}

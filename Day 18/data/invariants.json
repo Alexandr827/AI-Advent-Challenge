@@ -1,0 +1,51 @@
+{
+  "sets": {
+    "bpmn": {
+      "id": "bpmn",
+      "items": [
+        {
+          "id": "stack",
+          "type": "stack",
+          "allowed": [
+            "NodeJS",
+            "JavaScript"
+          ]
+        },
+        {
+          "id": "arch",
+          "type": "arch",
+          "allowed": [
+            "MVVM"
+          ]
+        },
+        {
+          "id": "budget",
+          "type": "budget",
+          "max": 100000
+        },
+        {
+          "id": "maxdeps",
+          "type": "maxdeps",
+          "max": 5
+        },
+        {
+          "id": "nobanned",
+          "type": "nobanned",
+          "banned": [
+            "electron"
+          ]
+        },
+        {
+          "id": "decision",
+          "type": "decision",
+          "text": "REST без GraphQL"
+        },
+        {
+          "id": "apis",
+          "type": "apis",
+          "policy": "free"
+        }
+      ]
+    }
+  }
+}

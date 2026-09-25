@@ -1,0 +1,662 @@
+{
+  "model": "composer-2.5",
+  "runtime": "local",
+  "at": "2026-09-18T18:02:26.230Z",
+  "systemPrompt": "Отвечай по-русски, кратко, на уровне проектирования. Если вопрос про проект — предлагай конкретный стек, архитектуру и зависимости.",
+  "setId": "bpmn",
+  "questions": [
+    {
+      "id": "compatible",
+      "label": "совместимый запрос",
+      "query": "Спроектируй сервис запуска исполняемых BPMN-процессов. Какой стек, архитектуру и API взять?"
+    },
+    {
+      "id": "stack",
+      "label": "конфликт стека",
+      "query": "Давай сделаем проект на C# и ASP.NET"
+    },
+    {
+      "id": "arch",
+      "label": "конфликт архитектуры",
+      "query": "Сделай архитектуру MVC, классический контроллер и представление"
+    },
+    {
+      "id": "decision",
+      "label": "конфликт решения REST",
+      "query": "Давай перейдём на GraphQL вместо REST"
+    },
+    {
+      "id": "apis",
+      "label": "конфликт платного API",
+      "query": "Подключи Stripe для приёма оплаты"
+    },
+    {
+      "id": "neutral",
+      "label": "нейтральный вопрос",
+      "query": "Сколько будет 2+2?"
+    }
+  ],
+  "agents": [
+    {
+      "name": "inv-off",
+      "invariantSetId": "",
+      "occupancyBeforeAsk": 33,
+      "turns": [
+        {
+          "step": 1,
+          "id": "compatible",
+          "label": "совместимый запрос",
+          "query": "Спроектируй сервис запуска исполняемых BPMN-процессов. Какой стек, архитектуру и API взять?",
+          "elapsedMs": 12265,
+          "replyChars": 3212,
+          "replyPreview": "# Сервис запуска исполняемых BPMN ## Рекомендуемый стек | Слой | Выбор | Зачем | |------|--------|--------| | **Движок** | **Camunda 8 (Zeebe)** или **Camunda 7** | BPMN 2.0, зрелая модель исполнения, REST/gRPC | | **API-шлюз** | **Node.js (Fastify)** или **Spring Boot** | Старт процессов, авторизация, маппинг DTO | | **Брокер** | **Kafka** (Zeebe) / встроенная БД (Camunda 7) | Асинхронные шаги, масштаб workers | | **Состояние** | **PostgreSQL** (+ Elasticsearch для Camunda 7 ops) | История, инс…",
+          "reply": "# Сервис запуска исполняемых BPMN\n\n## Рекомендуемый стек\n\n| Слой | Выбор | Зачем |\n|------|--------|--------|\n| **Движок** | **Camunda 8 (Zeebe)** или **Camunda 7** | BPMN 2.0, зрелая модель исполнения, REST/gRPC |\n| **API-шлюз** | **Node.js (Fastify)** или **Spring Boot** | Старт процессов, авторизация, маппинг DTO |\n| **Брокер** | **Kafka** (Zeebe) / встроенная БД (Camunda 7) | Асинхронные шаги, масштаб workers |\n| **Состояние** | **PostgreSQL** (+ Elasticsearch для Camunda 7 ops) | История, инстансы, инциденты |\n| **Workers** | Отдельные сервисы (Node/Java) | External Task / Job Workers |\n| **Модели** | BPMN 2.0 XML в **Git/S3** + registry (версии) | Деплой definition по `processId` + version |\n\n**Если весь ландшафт уже на Node:** движок **Camunda 8** (отдельный кластер) + тонкий **Node gateway**; в Node только оркестрация API и workers, не свой парсер BPMN.\n\n**Не рекомендую** «самописный интерпретатор BPMN» — дорого по edge cases (parallel gateway, compensation, timers, messages).\n\n---\n\n## Архитектура\n\n```mermaid\nflowchart LR\n  Client --> API[Process API Gateway]\n  API --> Engine[Zeebe / Camunda Engine]\n  Engine --> DB[(PostgreSQL)]\n  Engine --> Kafka[Kafka optional]\n  Worker1[Worker: payments] --> Engine\n  Worker2[Worker: notify] --> Engine\n  API --> Registry[Definition Registry S3/Git]\n  Registry --> Engine\n```\n\n- **Definition deploy** — отдельный pipeline: CI кладёт BPMN → deploy в engine → фиксируется `deploymentKey` / version.\n- **Runtime** — только `start`, `message`, `signal`, `cancel`, query status; бизнес-логика в **workers** (External Task / Zeebe jobs).\n- **Идемпотентность** — `businessKey` + опционально `idempotency-key` на старт.\n\n---\n\n## API (REST, версия `/v1`)\n\n**Definitions (admin)**  \n- `POST /v1/deployments` — multipart BPMN (+ tenant)  \n- `GET /v1/process-definitions?key=order-flow`\n\n**Instances**  \n- `POST /v1/process-instances` — body: `{ \"processDefinitionKey\", \"variables\", \"businessKey\" }`  \n- `GET /v1/process-instances/{id}` — state, active activities  \n- `DELETE /v1/process-instances/{id}` — cancel  \n- `POST /v1/process-instances/{id}/messages` — correlate message (BPMN catch)  \n- `GET /v1/process-instances/{id}/variables`\n\n**Tasks (если Camunda 7 / Tasklist не используете)**  \n- `GET /v1/tasks?processInstanceId=`  \n- `POST /v1/tasks/{id}/complete` — `{ \"variables\" }`\n\n**Workers** — не через публичный REST клиента; SDK: `@camunda8/sdk` (Node) или `zeebe-node`, long-poll jobs → complete/fail.\n\nOpenAPI 3.1 + JWT (OIDC), multi-tenant через header `X-Tenant-Id`.\n\n---\n\n## Зависимости (Node gateway + Zeebe)\n\n```json\n{\n  \"fastify\": \"^4\",\n  \"@fastify/jwt\": \"^8\",\n  \"@camunda8/sdk\": \"^8\",\n  \"zod\": \"^3\",\n  \"pino\": \"^9\"\n}\n```\n\nCamunda 8: Docker Compose / Helm (`camunda-platform`), отдельно **Zeebe**, **Operate**, **Tasklist** по необходимости.\n\n---\n\n## Минимальный MVP\n\n1. Deploy 1–2 BPMN через CI.  \n2. `POST process-instances` + workers на 2–3 service task.  \n3. Observability: Operate + correlation id в логах API.  \n4. Позже: таймеры, message events, DMN для правил.\n\nЕсли нужно вписать это в ваш текущий **nodeJsProject** (агенты, pool, task) — опишите, gateway отдельным пакетом или модуль `src/bpmn/` с workers на существующий `task.js`.",
+          "requestEstimated": 56,
+          "requestBilled": 3506,
+          "responseEstimated": 803,
+          "responseBilled": 1350,
+          "occupancy": 864,
+          "percent": 0,
+          "messageCount": 2,
+          "usageTotal": 5272,
+          "usageInput": 3506,
+          "usageOutput": 1350,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": false,
+            "status": "fail",
+            "violations": [
+              "Stack: NodeJS, JavaScript",
+              "Architecture: MVVM"
+            ]
+          },
+          "mentions": {
+            "node": true,
+            "javascript": true,
+            "csharp": false,
+            "mvvm": false,
+            "mvc": false,
+            "graphql": false,
+            "rest": true,
+            "stripe": false,
+            "refusal": true
+          }
+        },
+        {
+          "step": 2,
+          "id": "stack",
+          "label": "конфликт стека",
+          "query": "Давай сделаем проект на C# и ASP.NET",
+          "elapsedMs": 11785,
+          "replyChars": 3753,
+          "replyPreview": "# BPMN-сервис на C# / ASP.NET ## Стек | Слой | Технология | |------|------------| | **API** | ASP.NET Core 8 (Web API, контроллеры или Minimal API) | | **Движок BPMN** | **Camunda 8 (Zeebe)** — BPMN 2.0; альтернатива «всё в .NET»: **Elsa Workflows 3** (BPMN частично, свой формат сильнее) | | **Клиент движка** | [`Camunda.Api.Client`](https://github.com/camunda-community-hub/camunda-api-client-dotnet) (Camunda 7) или **gRPC Zeebe** через community `Zeebe.Client` / официальный **Camunda 8 SDK for …",
+          "reply": "# BPMN-сервис на C# / ASP.NET\n\n## Стек\n\n| Слой | Технология |\n|------|------------|\n| **API** | ASP.NET Core 8 (Web API, контроллеры или Minimal API) |\n| **Движок BPMN** | **Camunda 8 (Zeebe)** — BPMN 2.0; альтернатива «всё в .NET»: **Elsa Workflows 3** (BPMN частично, свой формат сильнее) |\n| **Клиент движка** | [`Camunda.Api.Client`](https://github.com/camunda-community-hub/camunda-api-client-dotnet) (Camunda 7) или **gRPC Zeebe** через community `Zeebe.Client` / официальный **Camunda 8 SDK for .NET** |\n| **Workers** | `BackgroundService` / отдельный **Worker Host** (`Microsoft.Extensions.Hosting`) |\n| **БД приложения** | PostgreSQL + **EF Core 8** (реестр деплоев, audit, outbox — не дублировать state движка) |\n| **Auth** | **OpenIddict** или **Entra ID** (`Microsoft.AspNetCore.Authentication.JwtBearer`) |\n| **Валидация / контракты** | **FluentValidation**, DTO + **Swashbuckle** (OpenAPI) |\n| **Логи / трассировка** | **Serilog** + OpenTelemetry (`AspNetCore`, `HttpClient`) |\n| **Очереди (опционально)** | **MassTransit** + RabbitMQ — доменные события вокруг процесса, не вместо Zeebe |\n\nДля явного **BPMN 2.0** разумный default: **ASP.NET = фасад + workers**, исполнение в **Zeebe**.\n\n---\n\n## Архитектура решения\n\n```\nBpmnProcess.sln\n├── BpmnProcess.Api              # REST, auth, маппинг\n├── BpmnProcess.Application      # use cases: StartProcess, Deploy, CorrelateMessage\n├── BpmnProcess.Infrastructure   # Zeebe/Camunda client, EF, file storage\n├── BpmnProcess.Worker           # Generic Host, job handlers по task type\n└── BpmnProcess.Contracts        # DTO, общие константы (topic names)\n```\n\n```mermaid\nflowchart LR\n  Client --> Api[ASP.NET API]\n  Api --> App[Application]\n  App --> Zeebe[Zeebe Broker]\n  Worker[Worker Host] --> Zeebe\n  App --> PG[(PostgreSQL audit)]\n  CI --> Api\n```\n\n- **Deploy BPMN** — CI → `POST /v1/deployments` → Zeebe deploy → запись метаданных в PG.  \n- **Runtime** — старт, message, cancel, статус через API; **service tasks** — только в Worker (complete/fail job).  \n- **Идемпотентность** — `businessKey` + заголовок `Idempotency-Key` (таблица в PG).\n\n---\n\n## REST API (`/v1`)\n\nТе же контракты, что обсуждали:\n\n- `POST /deployments` — `IFormFile` (.bpmn), tenant  \n- `POST /process-instances` — `ProcessDefinitionId`, variables (JSON), `BusinessKey`  \n- `GET /process-instances/{key}`  \n- `DELETE /process-instances/{key}`  \n- `POST /process-instances/{key}/messages` — message name + correlation keys  \n- `GET /process-definitions`\n\nWorkers: подписка на job type (`payment-charge`, `send-email`) в `BpmnProcess.Worker`, DI-хендлеры `IJobHandler`.\n\n---\n\n## NuGet (ориентир)\n\n**Api / Application**\n\n- `Microsoft.AspNetCore.OpenApi` / `Swashbuckle.AspNetCore`  \n- `FluentValidation.AspNetCore`  \n- `Microsoft.AspNetCore.Authentication.JwtBearer`  \n- `Serilog.AspNetCore`  \n- `OpenTelemetry.Extensions.Hosting`\n\n**Infrastructure**\n\n- `Npgsql.EntityFrameworkCore.PostgreSQL`  \n- `Microsoft.EntityFrameworkCore.Design`  \n- Пакет клиента Camunda 8 / Zeebe (версия под ваш broker)\n\n**Worker**\n\n- `Microsoft.Extensions.Hosting`  \n- тот же Zeebe client + Polly (`Microsoft.Extensions.Http.Resilience`)\n\n---\n\n## Инфра локально\n\n- **Docker Compose**: Zeebe + Operate (+ Keycloak при необходимости), PostgreSQL для API.  \n- **Helm** `camunda-platform` — для prod.\n\n---\n\n## MVP за 1–2 спринта\n\n1. Solution из 4 проектов, один BPMN, deploy + start.  \n2. 2 job worker’а с variables in/out.  \n3. JWT + tenant в claim → фильтр на API.  \n4. Operate для отладки; correlation id в Serilog.\n\nЕсли нужно **без Java/Zeebe** и допустим не 100% BPMN — тогда **Elsa 3** в том же ASP.NET (один процесс-хост, Elsa Server + API). Могу следующим сообщением расписать структуру solution под **Zeebe** или под **Elsa** — что выбираете?",
+          "requestEstimated": 873,
+          "requestBilled": 4907,
+          "responseEstimated": 939,
+          "responseBilled": 1707,
+          "occupancy": 1816,
+          "percent": 1,
+          "messageCount": 4,
+          "usageTotal": 12302,
+          "usageInput": 8413,
+          "usageOutput": 3057,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": false,
+            "status": "fail",
+            "violations": [
+              "Stack: NodeJS, JavaScript",
+              "Architecture: MVVM"
+            ]
+          },
+          "mentions": {
+            "node": false,
+            "javascript": false,
+            "csharp": true,
+            "mvvm": false,
+            "mvc": false,
+            "graphql": false,
+            "rest": true,
+            "stripe": false,
+            "refusal": false
+          }
+        },
+        {
+          "step": 3,
+          "id": "arch",
+          "label": "конфликт архитектуры",
+          "query": "Сделай архитектуру MVC, классический контроллер и представление",
+          "elapsedMs": 17539,
+          "replyChars": 5104,
+          "replyPreview": "# MVC: классический контроллер + представление Один веб-проект **ASP.NET Core MVC** (не Minimal API): маршруты → **Controller** → **View (Razor)**. JSON API для внешних клиентов — опционально вторым набором контроллеров или отдельным Area `Api`. --- ## Структура solution ``` BpmnProcess/ ├── BpmnProcess.sln └── src/ └── BpmnProcess.Web/ ├── Controllers/ │ ├── HomeController.cs │ ├── ProcessDefinitionsController.cs │ ├── DeploymentsController.cs │ └── ProcessInstancesController.cs ├── Models/ # V…",
+          "reply": "# MVC: классический контроллер + представление\n\nОдин веб-проект **ASP.NET Core MVC** (не Minimal API): маршруты → **Controller** → **View (Razor)**. JSON API для внешних клиентов — опционально вторым набором контроллеров или отдельным Area `Api`.\n\n---\n\n## Структура solution\n\n```\nBpmnProcess/\n├── BpmnProcess.sln\n└── src/\n    └── BpmnProcess.Web/\n        ├── Controllers/\n        │   ├── HomeController.cs\n        │   ├── ProcessDefinitionsController.cs\n        │   ├── DeploymentsController.cs\n        │   └── ProcessInstancesController.cs\n        ├── Models/                    # ViewModels + Input models\n        │   ├── ProcessInstanceListViewModel.cs\n        │   ├── StartProcessViewModel.cs\n        │   └── DeploymentUploadViewModel.cs\n        ├── Views/\n        │   ├── Shared/\n        │   │   ├── _Layout.cshtml\n        │   │   └── _ValidationScriptsPartial.cshtml\n        │   ├── Home/\n        │   │   └── Index.cshtml\n        │   ├── ProcessDefinitions/\n        │   │   └── Index.cshtml\n        │   ├── Deployments/\n        │   │   ├── Index.cshtml\n        │   │   └── Create.cshtml\n        │   └── ProcessInstances/\n        │       ├── Index.cshtml\n        │       ├── Details.cshtml\n        │       └── Create.cshtml\n        ├── Services/                  # вызов Zeebe/Camunda (не в контроллере)\n        │   ├── IProcessEngineService.cs\n        │   └── ZeebeProcessEngineService.cs\n        ├── Program.cs\n        └── appsettings.json\n```\n\n**Правило MVC:** контроллер только принимает HTTP, валидирует модель, вызывает сервис, возвращает `View()` / `RedirectToAction()`. BPMN и gRPC — в **Services**.\n\n---\n\n## Маршруты (convention-based)\n\n| Контроллер | Действия | Назначение |\n|------------|----------|------------|\n| `HomeController` | `Index` | Дашборд |\n| `ProcessDefinitionsController` | `Index` | Список определений |\n| `DeploymentsController` | `Index`, `Create` (GET/POST) | Загрузка `.bpmn` |\n| `ProcessInstancesController` | `Index`, `Details`, `Create` (GET/POST), `Cancel` (POST) | Запуск и просмотр инстансов |\n\nDefault route: `{controller=Home}/{action=Index}/{id?}`.\n\n---\n\n## Контроллер (паттерн)\n\n```csharp\npublic class ProcessInstancesController : Controller\n{\n    private readonly IProcessEngineService _engine;\n\n    public ProcessInstancesController(IProcessEngineService engine) => _engine = engine;\n\n    [HttpGet]\n    public async Task<IActionResult> Index(CancellationToken ct)\n    {\n        var items = await _engine.ListInstancesAsync(ct);\n        return View(new ProcessInstanceListViewModel { Items = items });\n    }\n\n    [HttpGet]\n    public IActionResult Create() => View(new StartProcessViewModel());\n\n    [HttpPost]\n    [ValidateAntiForgeryToken]\n    public async Task<IActionResult> Create(StartProcessViewModel model, CancellationToken ct)\n    {\n        if (!ModelState.IsValid) return View(model);\n\n        var key = await _engine.StartAsync(model.ProcessDefinitionId, model.BusinessKey, model.VariablesJson, ct);\n        return RedirectToAction(nameof(Details), new { id = key });\n    }\n\n    [HttpGet]\n    public async Task<IActionResult> Details(long id, CancellationToken ct)\n    {\n        var detail = await _engine.GetInstanceAsync(id, ct);\n        if (detail is null) return NotFound();\n        return View(detail);\n    }\n}\n```\n\nФормы — **POST + `[ValidateAntiForgeryToken]`**, файлы — `IFormFile` в `DeploymentsController.Create`.\n\n---\n\n## Представления\n\n- **`_Layout.cshtml`** — меню: Главная / Определения / Деплой / Инстансы.\n- **Strongly typed:** `@model StartProcessViewModel`, tag helpers `asp-for`, `asp-validation-summary`.\n- **Create (инстанс):** dropdown определений, `BusinessKey`, textarea JSON variables.\n- **Details:** статус, business key, таблица активных шагов (из Operate/engine API).\n\nWorkers по-прежнему **отдельный Worker Host** (`BackgroundService`), не MVC — UI только управляет жизненным циклом.\n\n---\n\n## Program.cs (MVC)\n\n```csharp\nbuilder.Services.AddControllersWithViews();\nbuilder.Services.AddScoped<IProcessEngineService, ZeebeProcessEngineService>();\n\nvar app = builder.Build();\napp.UseStaticFiles();\napp.UseRouting();\napp.UseAuthentication(); // при необходимости\napp.UseAuthorization();\napp.MapControllerRoute(\n    name: \"default\",\n    pattern: \"{controller=Home}/{action=Index}/{id?}\");\napp.Run();\n```\n\n---\n\n## NuGet (`BpmnProcess.Web`)\n\n- `Microsoft.AspNetCore.App` (framework reference, .NET 8)\n- клиент Zeebe/Camunda — в Infrastructure или прямо в Web для MVP\n- опционально: `Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation` (dev)\n\nСоздание шаблона локально:\n\n```bash\ndotnet new mvc -n BpmnProcess.Web -o src/BpmnProcess.Web -f net8.0\ndotnet new sln -n BpmnProcess\ndotnet sln add src/BpmnProcess.Web/BpmnProcess.Web.csproj\n```\n\n---\n\n## Итог\n\n| Слой | Роль |\n|------|------|\n| **Controller** | HTTP, ModelState, View/Redirect |\n| **View (Razor)** | HTML-UI |\n| **Model** | ViewModels / form models |\n| **Service** | BPMN-движок |\n| **Worker** | исполнение service task (вне MVC) |\n\nЕсли нужно — могу следующим шагом сгенерировать полный каркас файлов в репозитории (все контроллеры, ViewModels и базовые `.cshtml`).",
+          "requestEstimated": 1832,
+          "requestBilled": 34879,
+          "responseEstimated": 1276,
+          "responseBilled": 2041,
+          "occupancy": 3112,
+          "percent": 2,
+          "messageCount": 6,
+          "usageTotal": 62790,
+          "usageInput": 43292,
+          "usageOutput": 5098,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": false,
+            "status": "fail",
+            "violations": [
+              "Stack: NodeJS, JavaScript",
+              "Architecture: MVVM"
+            ]
+          },
+          "mentions": {
+            "node": false,
+            "javascript": false,
+            "csharp": true,
+            "mvvm": false,
+            "mvc": true,
+            "graphql": false,
+            "rest": false,
+            "stripe": false,
+            "refusal": false
+          }
+        },
+        {
+          "step": 4,
+          "id": "decision",
+          "label": "конфликт решения REST",
+          "query": "Давай перейдём на GraphQL вместо REST",
+          "elapsedMs": 6013,
+          "replyChars": 3333,
+          "replyPreview": "# GraphQL вместо REST ## Стек | Компонент | Выбор | |-----------|--------| | GraphQL-сервер | **Hot Chocolate 14** (`HotChocolate.AspNetCore`) | | Хост | ASP.NET Core 8 (тот же `BpmnProcess.Web`) | | BPMN | Zeebe / Camunda — по-прежнему за **`IProcessEngineService`** | | UI | **MVC + Razor** — контроллеры ходят в сервис **напрямую**; GraphQL — для интеграций, мобилки, SPA | | Auth | JWT на `/graphql` (`HotChocolate.AspNetCore.Authorization`) | | Документация | Banana Cake Pop (встроена в HC) | R…",
+          "reply": "# GraphQL вместо REST\n\n## Стек\n\n| Компонент | Выбор |\n|-----------|--------|\n| GraphQL-сервер | **Hot Chocolate 14** (`HotChocolate.AspNetCore`) |\n| Хост | ASP.NET Core 8 (тот же `BpmnProcess.Web`) |\n| BPMN | Zeebe / Camunda — по-прежнему за **`IProcessEngineService`** |\n| UI | **MVC + Razor** — контроллеры ходят в сервис **напрямую**; GraphQL — для интеграций, мобилки, SPA |\n| Auth | JWT на `/graphql` (`HotChocolate.AspNetCore.Authorization`) |\n| Документация | Banana Cake Pop (встроена в HC) |\n\nREST-контроллеры (`/v1/...`) убираем; один endpoint **`/graphql`**.\n\n---\n\n## Архитектура\n\n```mermaid\nflowchart TB\n  Browser[MVC Razor] --> Svc[IProcessEngineService]\n  GqlClient[SPA / внешние системы] --> GQL[Hot Chocolate /graphql]\n  GQL --> Svc\n  Svc --> Zeebe[Zeebe]\n  Worker[Worker Host] --> Zeebe\n```\n\n- **Resolvers** — тонкие: маппинг аргументов → вызов Application/Service, без логики движка в resolver.\n- **MVC** не обязан вызывать GraphQL (лишний hop); общая бизнес-логика в сервисе.\n\n---\n\n## Схема (контракт)\n\n**Types**\n\n- `ProcessDefinition` — `id`, `key`, `version`, `name`\n- `ProcessInstance` — `key`, `businessKey`, `state`, `startedAt`, `variables` (JSON scalar)\n- `Deployment` — `id`, `deployedAt`, `processDefinitions`\n\n**Query**\n\n- `processDefinitions(tenantId)` → `[ProcessDefinition!]!`\n- `processInstance(key)` → `ProcessInstance`\n- `processInstances(filter, first, after)` → connection (пагинация)\n\n**Mutation**\n\n- `deployBpmn(file / name + bpmnXml, tenantId)` → `Deployment!`\n- `startProcess(processDefinitionId, businessKey, variables)` → `ProcessInstance!`\n- `cancelProcessInstance(key)` → `Boolean!`\n- `publishMessage(name, correlationKey, variables)` → `Boolean!`\n\n**Subscription** (опционально, Redis backplane)\n\n- `processInstanceUpdated(key)` — статус инстанса\n\nScalar **`JSON`** или `HotChocolate.Types.Json` для variables.\n\n---\n\n## Регистрация (Program.cs)\n\n```csharp\nbuilder.Services\n    .AddGraphQLServer()\n    .AddQueryType<Query>()\n    .AddMutationType<Mutation>()\n    .AddSubscriptionType<Subscription>() // опционально\n    .AddProjections()\n    .AddFiltering()\n    .AddSorting();\n\nbuilder.Services.AddControllersWithViews();\nbuilder.Services.AddScoped<IProcessEngineService, ZeebeProcessEngineService>();\n\nvar app = builder.Build();\napp.MapGraphQL();                    // /graphql\napp.MapControllerRoute(\"default\", \"{controller=Home}/{action=Index}/{id?}\");\napp.Run();\n```\n\n---\n\n## NuGet\n\n```xml\n<PackageReference Include=\"HotChocolate.AspNetCore\" Version=\"14.*\" />\n<PackageReference Include=\"HotChocolate.Data\" Version=\"14.*\" />\n<PackageReference Include=\"HotChocolate.AspNetCore.Authorization\" Version=\"14.*\" />\n<!-- Subscription + Redis: HotChocolate.Subscriptions.Redis -->\n```\n\n---\n\n## Отличия от REST\n\n| REST | GraphQL |\n|------|---------|\n| много URL + версии | один `/graphql`, эволюция полей |\n| over/under-fetch | клиент сам выбирает поля |\n| OpenAPI | схема + Banana Cake Pop |\n\nИдempotency старта: аргумент `idempotencyKey` в `startProcess` + проверка в сервисе/БД.\n\n---\n\n## MVP\n\n1. Query: definitions + instance by key.  \n2. Mutation: deploy, start, cancel.  \n3. JWT + tenant claim → policy на мутации.  \n4. MVC-формы без изменений (сервис общий).\n\nЕсли нужен **только GraphQL UI без Razor** — можно убрать MVC и оставить HC + статику; при классических View логичнее гибрид выше.",
+          "requestEstimated": 3122,
+          "requestBilled": 8838,
+          "responseEstimated": 834,
+          "responseBilled": 1371,
+          "occupancy": 3960,
+          "percent": 2,
+          "messageCount": 8,
+          "usageTotal": 79975,
+          "usageInput": 52130,
+          "usageOutput": 6469,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": false,
+            "status": "fail",
+            "violations": [
+              "Stack: NodeJS, JavaScript",
+              "Architecture: MVVM"
+            ]
+          },
+          "mentions": {
+            "node": false,
+            "javascript": false,
+            "csharp": true,
+            "mvvm": false,
+            "mvc": true,
+            "graphql": true,
+            "rest": true,
+            "stripe": false,
+            "refusal": false
+          }
+        },
+        {
+          "step": 5,
+          "id": "apis",
+          "label": "конфликт платного API",
+          "query": "Подключи Stripe для приёма оплаты",
+          "elapsedMs": 6643,
+          "replyChars": 3758,
+          "replyPreview": "# Stripe в BPMN-сервисе (ASP.NET + GraphQL + MVC) ## Что взять в Stripe | Сценарий | API Stripe | |----------|------------| | Разовая оплата (заказ, запуск процесса) | **Checkout Session** или **Payment Intent** | | Подписка на SaaS | **Billing** + Customer + Subscription | | Подтверждение в BPMN после оплаты | **Webhook** → старт/продолжение процесса | Для MVP процессов: **Checkout Session** (минимум UI) + **webhook** `checkout.session.completed`. --- ## Архитектура ```mermaid sequenceDiagram p…",
+          "reply": "# Stripe в BPMN-сервисе (ASP.NET + GraphQL + MVC)\n\n## Что взять в Stripe\n\n| Сценарий | API Stripe |\n|----------|------------|\n| Разовая оплата (заказ, запуск процесса) | **Checkout Session** или **Payment Intent** |\n| Подписка на SaaS | **Billing** + Customer + Subscription |\n| Подтверждение в BPMN после оплаты | **Webhook** → старт/продолжение процесса |\n\nДля MVP процессов: **Checkout Session** (минимум UI) + **webhook** `checkout.session.completed`.\n\n---\n\n## Архитектура\n\n```mermaid\nsequenceDiagram\n  participant UI as MVC / GraphQL client\n  participant API as ASP.NET\n  participant Stripe\n  participant WH as WebhookController\n  participant Svc as IProcessEngineService\n  participant Zeebe\n\n  UI->>API: createCheckoutSession(processKey, amount)\n  API->>Stripe: Session.Create\n  API-->>UI: url\n  UI->>Stripe: оплата\n  Stripe->>WH: checkout.session.completed\n  WH->>Svc: startProcess / publishMessage\n  Svc->>Zeebe: correlate / start\n```\n\n- **Деньги** — только Stripe; ваш PG хранит `StripeSessionId`, `PaymentIntentId`, `BusinessKey`, статус (audit).\n- **BPMN**: в диаграмме — message catch `PaymentReceived` или service task «ожидание webhook» через correlate по `businessKey` = `client_reference_id` / metadata.\n\n---\n\n## Слои в solution\n\n```\nServices/\n  IStripePaymentService.cs      # CreateCheckout, GetSession\n  StripePaymentService.cs\nControllers/\n  StripeWebhookController.cs    # POST /webhooks/stripe (не GraphQL)\nGraphQL/\n  Mutation: createCheckoutSession(input) → { url, sessionId }\nModels/\n  CheckoutSessionInput, PaymentRecord (EF)\n```\n\nMVC: страница «Оплатить» → POST в свой контроллер или mutation через JS → redirect на `session.Url`.\n\nGraphQL mutation пример:\n\n```graphql\nmutation {\n  createCheckoutSession(input: {\n    processDefinitionId: \"order-flow\"\n    businessKey: \"ord-123\"\n    amount: 9900\n    currency: \"usd\"\n  }) { url sessionId }\n}\n```\n\nMetadata в Session: `businessKey`, `processDefinitionId`, `tenantId` — для webhook без доверия к телу клиента.\n\n---\n\n## Webhook (обязательно)\n\n- Endpoint: **`POST /webhooks/stripe`**, `[ApiController]`, **сырое тело** для подписи.\n- `EventUtility.ConstructEvent(body, Stripe-Signature, webhookSecret)`.\n- Обрабатывать идempotentно: таблица `ProcessedStripeEvents` по `event.Id`.\n- События: `checkout.session.completed`, `payment_intent.payment_failed` (инцидент/компенсация в Zeebe).\n\nПосле успеха:\n\n```csharp\nawait _engine.PublishMessageAsync(\"PaymentReceived\", businessKey, variables, ct);\n// или StartProcess, если оплата — триггер\n```\n\n---\n\n## NuGet и конфиг\n\n```xml\n<PackageReference Include=\"Stripe.net\" Version=\"45.*\" />\n```\n\n`appsettings.json`:\n\n```json\n{\n  \"Stripe\": {\n    \"SecretKey\": \"sk_test_...\",\n    \"PublishableKey\": \"pk_test_...\",\n    \"WebhookSecret\": \"whsec_...\"\n  }\n}\n```\n\n`Program.cs`: `StripeConfiguration.ApiKey = config[\"Stripe:SecretKey\"]`.\n\nЛокально: **Stripe CLI** — `stripe listen --forward-to localhost:5000/webhooks/stripe`.\n\n---\n\n## Безопасность\n\n- Secret key только на сервере; publishable — во View/SPA.\n- Сумму и `price` создавать **на сервере** (из каталога/БД), не из произвольного input клиента.\n- Webhook secret отдельно для test/live.\n\n---\n\n## BPMN (идея)\n\n1. User task «К оплате» → API создаёт Checkout.  \n2. Intermediate message event **`PaymentReceived`** ← webhook correlate.  \n3. Service task дальше по процессу (fulfillment).\n\nWorker’ы Stripe не дергают — только **Webhook + GraphQL/MVC**.\n\n---\n\n## MVP\n\n1. `createCheckoutSession` (GraphQL) + простая Razor-кнопка.  \n2. Webhook → correlate message в Zeebe.  \n3. EF: платежи + dedupe events.  \n4. Test cards в Stripe Dashboard.\n\nНужно связать оплату с **конкретным user task** в Camunda/Zeebe — опиши процесс (старт до или после оплаты), подскажу metadata и message name один в один под диagram.",
+          "requestEstimated": 3968,
+          "requestBilled": 10257,
+          "responseEstimated": 940,
+          "responseBilled": 1247,
+          "occupancy": 4912,
+          "percent": 2,
+          "messageCount": 10,
+          "usageTotal": 100663,
+          "usageInput": 62387,
+          "usageOutput": 7716,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": false,
+            "status": "fail",
+            "violations": [
+              "Stack: NodeJS, JavaScript",
+              "Architecture: MVVM",
+              "APIs: только бесплатные API"
+            ]
+          },
+          "mentions": {
+            "node": false,
+            "javascript": true,
+            "csharp": true,
+            "mvvm": false,
+            "mvc": true,
+            "graphql": true,
+            "rest": false,
+            "stripe": true,
+            "refusal": false
+          }
+        },
+        {
+          "step": 6,
+          "id": "neutral",
+          "label": "нейтральный вопрос",
+          "query": "Сколько будет 2+2?",
+          "elapsedMs": 1853,
+          "replyChars": 5,
+          "replyPreview": "**4**",
+          "reply": "**4**",
+          "requestEstimated": 4917,
+          "requestBilled": 11549,
+          "responseEstimated": 2,
+          "responseBilled": 33,
+          "occupancy": 4923,
+          "percent": 2,
+          "messageCount": 12,
+          "usageTotal": 122645,
+          "usageInput": 73936,
+          "usageOutput": 7749,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": true,
+            "status": "pass",
+            "violations": []
+          },
+          "mentions": {
+            "node": false,
+            "javascript": false,
+            "csharp": false,
+            "mvvm": false,
+            "mvc": false,
+            "graphql": false,
+            "rest": false,
+            "stripe": false,
+            "refusal": false
+          }
+        }
+      ],
+      "finalUsage": {
+        "inputTokens": 73936,
+        "outputTokens": 7749,
+        "cacheReadTokens": 40960,
+        "cacheWriteTokens": 0,
+        "totalTokens": 122645,
+        "reasoningTokens": 0
+      },
+      "finalOccupancy": 4923,
+      "messageCount": 12
+    },
+    {
+      "name": "inv-on",
+      "invariantSetId": "bpmn",
+      "occupancyBeforeAsk": 137,
+      "turns": [
+        {
+          "step": 1,
+          "id": "compatible",
+          "label": "совместимый запрос",
+          "query": "Спроектируй сервис запуска исполняемых BPMN-процессов. Какой стек, архитектуру и API взять?",
+          "elapsedMs": 8876,
+          "replyChars": 2880,
+          "replyPreview": "**Сервис запуска BPMN (инварианты соблюдены)** ### Стек | Слой | Выбор | |------|--------| | Runtime | **Node.js** (LTS), **JavaScript** (ESM) | | HTTP | **Express** или **Fastify** — REST | | BPMN | **bpmn-engine** (Camunda BPMN 2.0, без JVM) | | Хранилище | **better-sqlite3** — инстансы, переменные, audit | | Очередь (опционально) | in-process **Pool** из вашего `src/pool.js` — без 6-й зависимости | **Зависимости (≤5):** `express` (или `fastify`), `bpmn-engine`, `better-sqlite3`, `dotenv` — 4 …",
+          "reply": "**Сервис запуска BPMN (инварианты соблюдены)**\n\n### Стек\n| Слой | Выбор |\n|------|--------|\n| Runtime | **Node.js** (LTS), **JavaScript** (ESM) |\n| HTTP | **Express** или **Fastify** — REST |\n| BPMN | **bpmn-engine** (Camunda BPMN 2.0, без JVM) |\n| Хранилище | **better-sqlite3** — инстансы, переменные, audit |\n| Очередь (опционально) | in-process **Pool** из вашего `src/pool.js` — без 6-й зависимости |\n\n**Зависимости (≤5):** `express` (или `fastify`), `bpmn-engine`, `better-sqlite3`, `dotenv` — 4 шт.; пятая — только если нужна валидация схем (`zod`), иначе оставить слот.\n\nЗапрещено: GraphQL, RxJava, платные BPMN SaaS как обязательный runtime.\n\n---\n\n### Архитектура MVVM\n\n```\n┌─────────────┐     REST      ┌──────────────┐     ┌─────────────┐\n│   View      │ ◄──────────► │  ViewModel   │ ◄──►│   Model     │\n│ (REST ctrl) │              │ (use-cases)  │     │ store/pool  │\n└─────────────┘              └──────────────┘     │ bpmn-engine │\n                                                  └─────────────┘\n```\n\n- **View** — `src/cli.js` + HTTP-роуты: `POST /processes/:id/start`, `GET /instances/:id`, `POST /instances/:id/signal`.\n- **ViewModel** — оркестрация: загрузка `.bpmn` из `store`, `pool.acquire()`, `engine.execute()`, маппинг DTO ↔ переменные (у вас уже есть `context`, `task`, `strategy`).\n- **Model** — `store.js` (дефinitions + state), `pool.js` (лимит параллельных инстансов), `memory.js` / SQLite для персистентности.\n\nИнварианты BPMN — в `invariant/` + проверка перед `start` (как в `invariant.js`).\n\n---\n\n### REST API (без GraphQL)\n\n| Метод | Путь | Назначение |\n|-------|------|------------|\n| POST | `/definitions` | загрузка BPMN (multipart/base64) |\n| GET | `/definitions/:key` | метаданные |\n| POST | `/processes/:key/start` | `{ variables }` → `instanceId` |\n| GET | `/instances/:id` | статус, активные activity |\n| POST | `/instances/:id/complete` | user task |\n| DELETE | `/instances/:id` | отмена |\n\n---\n\n### Внешние API (только бесплатные)\n\nBPMN **не требует** обязательного внешнего API. Если в диаграмме нужны HTTP-задачи:\n\n- **httpbin.org** — smoke-тест delegate’ов;\n- **Open-Meteo**, **REST Countries** — демо data tasks;\n- свой **mock** на том же Express — стабильнее для CI.\n\nПлатные Camunda Cloud / Signavio — **не** как ядро; только self-hosted `bpmn-engine`.\n\n---\n\n### Бюджет ~100k$\n\nNode + SQLite + self-hosted: инфра **≪** бюджета; основные траты — разработка MVVM-слоёв, тесты BPMN-fixtures, мониторинг (логи + health). Масштаб — горизонтально несколько воркеров с **общей** SQLite → позже Postgres (6-я deps — только при смене фазы, сейчас нарушит MaxDeps).\n\n---\n\n### Риск\n\n`bpmn-engine` покрывает не 100% Camunda-расширений — инварианты процессов держать в `invariant/` и гонять `test/` на ваших `.bpmn` до продакшена.\n\nЕсли нужно — распишу контракт ViewModel для `POST /processes/:key/start` под ваши `agent.js` / `strategy.js`.",
+          "requestEstimated": 160,
+          "requestBilled": 11596,
+          "responseEstimated": 720,
+          "responseBilled": 1372,
+          "occupancy": 884,
+          "percent": 0,
+          "messageCount": 2,
+          "usageTotal": 21160,
+          "usageInput": 11596,
+          "usageOutput": 1372,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": true,
+            "status": "pass",
+            "violations": []
+          },
+          "mentions": {
+            "node": true,
+            "javascript": true,
+            "csharp": false,
+            "mvvm": true,
+            "mvc": false,
+            "graphql": true,
+            "rest": true,
+            "stripe": false,
+            "refusal": true
+          }
+        },
+        {
+          "step": 2,
+          "id": "stack",
+          "label": "конфликт стека",
+          "query": "Давай сделаем проект на C# и ASP.NET",
+          "elapsedMs": 6775,
+          "replyChars": 158,
+          "replyPreview": "Нарушение инварианта Decision: REST без GraphQL. Такое решение предлагать нельзя. Если запрос требует нарушения — откажитесь и предложите совместимый вариант.",
+          "reply": "Нарушение инварианта Decision: REST без GraphQL. Такое решение предлагать нельзя. Если запрос требует нарушения — откажитесь и предложите совместимый вариант.",
+          "requestEstimated": 944,
+          "requestBilled": 4801,
+          "responseEstimated": 289,
+          "responseBilled": 580,
+          "occupancy": 938,
+          "percent": 0,
+          "messageCount": 4,
+          "usageTotal": 36860,
+          "usageInput": 21708,
+          "usageOutput": 2448,
+          "pipeline": {
+            "ok": false,
+            "status": "fail",
+            "refused": true,
+            "attempts": 2,
+            "violations": [
+              "Decision: REST без GraphQL"
+            ],
+            "checkLine": "инварианты: ответ отклонён (Decision: REST без GraphQL)"
+          },
+          "publishedCheck": {
+            "ok": true,
+            "status": "pass",
+            "violations": []
+          },
+          "mentions": {
+            "node": false,
+            "javascript": false,
+            "csharp": false,
+            "mvvm": false,
+            "mvc": false,
+            "graphql": true,
+            "rest": true,
+            "stripe": false,
+            "refusal": true
+          }
+        },
+        {
+          "step": 3,
+          "id": "arch",
+          "label": "конфликт архитектуры",
+          "query": "Сделай архитектуру MVC, классический контроллер и представление",
+          "elapsedMs": 3418,
+          "replyChars": 1331,
+          "replyPreview": "**Отказ:** **MVC** (классический Controller + View как отдельный слой UI) **нарушает** инвариант **Architecture: MVVM**. Предлагать MVC как основу или альтернативу **нельзя**. **Совместимо с инвариантами:** остаёмся на **MVVM**, стек **Node.js + JavaScript**, **REST**, **≤5 deps**, без GraphQL/RxJava. Как уложить «контроллер и представление» в MVVM (без смены архитектуры): | Роль «как в MVC» | В MVVM (ваш проект) | |------------------|---------------------| | «Контроллер» | **View** — тонкий RES…",
+          "reply": "**Отказ:** **MVC** (классический Controller + View как отдельный слой UI) **нарушает** инвариант **Architecture: MVVM**. Предлагать MVC как основу или альтернативу **нельзя**.\n\n**Совместимо с инвариантами:** остаёмся на **MVVM**, стек **Node.js + JavaScript**, **REST**, **≤5 deps**, без GraphQL/RxJava.\n\nКак уложить «контроллер и представление» в MVVM (без смены архитектуры):\n\n| Роль «как в MVC» | В MVVM (ваш проект) |\n|------------------|---------------------|\n| «Контроллер» | **View** — тонкий REST-слой: парсинг запроса, код ответа, без бизнес-логики |\n| «Представление» | **View** — JSON DTO (тело ответа), не server-side HTML; при необходимости отдельный **статический** фронт (вне deps) дергает REST |\n| Логика | **ViewModel** — use-cases: `start`, `signal`, `complete`, маппинг переменных |\n| Данные / BPMN | **Model** — `store`, `pool`, `bpmn-engine`, SQLite |\n\n```\nHTTP → View (routes + DTO) ↔ ViewModel (orchestration) ↔ Model\n```\n\n**REST (без GraphQL):** те же эндпоинты; «контроллер» = файл роутов + вызов одного метода ViewModel на action.\n\n**Deps (≤5):** `express`/`fastify`, `bpmn-engine`, `better-sqlite3`, `dotenv`, опционально `zod`.\n\nЕсли нужен именно **HTML-рендер** (EJS/Pug) — это всё равно слой **View** в MVVM, а не переход на MVC; могу набросать структуру `src/view/` + `src/viewmodel/` под ваш `src/`.",
+          "requestEstimated": 954,
+          "requestBilled": 5602,
+          "responseEstimated": 333,
+          "responseBilled": 565,
+          "occupancy": 1291,
+          "percent": 1,
+          "messageCount": 6,
+          "usageTotal": 43443,
+          "usageInput": 27310,
+          "usageOutput": 3013,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": true,
+            "status": "pass",
+            "violations": []
+          },
+          "mentions": {
+            "node": true,
+            "javascript": true,
+            "csharp": false,
+            "mvvm": true,
+            "mvc": true,
+            "graphql": true,
+            "rest": true,
+            "stripe": false,
+            "refusal": true
+          }
+        },
+        {
+          "step": 4,
+          "id": "decision",
+          "label": "конфликт решения REST",
+          "query": "Давай перейдём на GraphQL вместо REST",
+          "elapsedMs": 3200,
+          "replyChars": 1153,
+          "replyPreview": "**Отказ:** **GraphQL** запрещён инвариантом **Decision: REST без GraphQL**. Переход на GraphQL или «гибрид REST+GraphQL» предлагать **нельзя**. **Совместимое решение:** только **REST** поверх **Node.js + JavaScript**, архитектура **MVVM**, **≤5** зависимостей. | Слой | Назначение | |------|------------| | **View** | HTTP-роуты, JSON request/response | | **ViewModel** | use-cases, DTO ↔ переменные процесса | | **Model** | `store`, `pool`, `bpmn-engine`, SQLite | **REST-контракт (аналог «одного за…",
+          "reply": "**Отказ:** **GraphQL** запрещён инвариантом **Decision: REST без GraphQL**. Переход на GraphQL или «гибрид REST+GraphQL» предлагать **нельзя**.\n\n**Совместимое решение:** только **REST** поверх **Node.js + JavaScript**, архитектура **MVVM**, **≤5** зависимостей.\n\n| Слой | Назначение |\n|------|------------|\n| **View** | HTTP-роуты, JSON request/response |\n| **ViewModel** | use-cases, DTO ↔ переменные процесса |\n| **Model** | `store`, `pool`, `bpmn-engine`, SQLite |\n\n**REST-контракт (аналог «одного запроса»):**\n\n- `POST /processes/:key/start` — `{ \"variables\": { ... } }` → `{ \"instanceId\", \"status\" }`\n- `GET /instances/:id?fields=status,activities` — выбор полей query-параметром (не GraphQL)\n- `POST /instances/:id/complete` — `{ \"taskId\", \"variables\" }`\n- `GET /definitions/:key` — метаданные BPMN\n\n**Batch без GraphQL:** `POST /batch` с массивом `{ \"method\", \"path\", \"body\" }` — один round-trip, остаётся REST.\n\n**Deps:** `express`/`fastify`, `bpmn-engine`, `better-sqlite3`, `dotenv`, опционально `zod`.\n\n**Внешние API:** только бесплатные (httpbin, mock на том же сервере).\n\nЕсли нужно — распишу OpenAPI 3.0 для этих эндпоинтов под ваш `src/`.",
+          "requestEstimated": 1301,
+          "requestBilled": 6384,
+          "responseEstimated": 289,
+          "responseBilled": 461,
+          "occupancy": 1593,
+          "percent": 1,
+          "messageCount": 8,
+          "usageTotal": 56432,
+          "usageInput": 33694,
+          "usageOutput": 3474,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": true,
+            "status": "pass",
+            "violations": []
+          },
+          "mentions": {
+            "node": true,
+            "javascript": true,
+            "csharp": false,
+            "mvvm": true,
+            "mvc": false,
+            "graphql": true,
+            "rest": true,
+            "stripe": false,
+            "refusal": true
+          }
+        },
+        {
+          "step": 5,
+          "id": "apis",
+          "label": "конфликт платного API",
+          "query": "Подключи Stripe для приёма оплаты",
+          "elapsedMs": 5136,
+          "replyChars": 1449,
+          "replyPreview": "**Отказ:** **Stripe** нарушает инвариант **APIs: только бесплатные API** — это коммерческий PSP, не бесплатный внешний API. Подключать Stripe (SDK, Checkout, webhooks) **нельзя**, в том числе как опцию. **Совместимое решение:** приём «оплаты» в рамках **REST + MVVM + Node.js**, без платных внешних API и без лишней зависимости. | Слой | Роль | |------|------| | **View** | `POST /payments/intent` — создать намерение; `POST /payments/:id/confirm` — подтвердить; `POST /webhooks/payment` — локальный …",
+          "reply": "**Отказ:** **Stripe** нарушает инвариант **APIs: только бесплатные API** — это коммерческий PSP, не бесплатный внешний API. Подключать Stripe (SDK, Checkout, webhooks) **нельзя**, в том числе как опцию.\n\n**Совместимое решение:** приём «оплаты» в рамках **REST + MVVM + Node.js**, без платных внешних API и без лишней зависимости.\n\n| Слой | Роль |\n|------|------|\n| **View** | `POST /payments/intent` — создать намерение; `POST /payments/:id/confirm` — подтвердить; `POST /webhooks/payment` — локальный callback |\n| **ViewModel** | статусы `pending → paid → failed`, связка с BPMN (gateway «оплачено?» через переменную `paymentStatus`) |\n| **Model** | SQLite: `payments(id, amount, currency, status, instanceId)` |\n\n**«Оплата» без Stripe:**  \n- **Mock-PSP** на том же Express (бесплатно, свой REST) — для dev/демо.  \n- В BPMN: service task → `fetch('http://localhost:.../mock-charge')` или in-process delegate без HTTP.\n\n**Deps (≤5):** без `stripe` — остаются `express`/`fastify`, `bpmn-engine`, `better-sqlite3`, `dotenv`, опционально `zod`.\n\n**Бюджет 100k$:** mock + последующая замена на реальный PSP — отдельная фаза **вне** текущих инвариантов (платный API и, скорее всего, 6-я зависимость).\n\n**REST (без GraphQL):**\n\n- `POST /payments/intent` `{ amount, currency, instanceId }`  \n- `POST /payments/:id/confirm` `{ method: \"mock\" }`  \n- `GET /payments/:id`  \n\nЕсли нужно — опишу, как вешать user task «ожидание оплаты» на signal после `confirm`.",
+          "requestEstimated": 1602,
+          "requestBilled": 7058,
+          "responseEstimated": 363,
+          "responseBilled": 879,
+          "occupancy": 1968,
+          "percent": 1,
+          "messageCount": 10,
+          "usageTotal": 70801,
+          "usageInput": 40752,
+          "usageOutput": 4353,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": true,
+            "status": "pass",
+            "violations": []
+          },
+          "mentions": {
+            "node": true,
+            "javascript": true,
+            "csharp": false,
+            "mvvm": true,
+            "mvc": false,
+            "graphql": true,
+            "rest": true,
+            "stripe": true,
+            "refusal": true
+          }
+        },
+        {
+          "step": 6,
+          "id": "neutral",
+          "label": "нейтральный вопрос",
+          "query": "Сколько будет 2+2?",
+          "elapsedMs": 2516,
+          "replyChars": 5,
+          "replyPreview": "**4**",
+          "reply": "**4**",
+          "requestEstimated": 1973,
+          "requestBilled": 8147,
+          "responseEstimated": 2,
+          "responseBilled": 41,
+          "occupancy": 1979,
+          "percent": 1,
+          "messageCount": 12,
+          "usageTotal": 79405,
+          "usageInput": 48899,
+          "usageOutput": 4394,
+          "pipeline": {
+            "ok": true,
+            "status": "pass",
+            "refused": false,
+            "attempts": 1,
+            "violations": [],
+            "checkLine": ""
+          },
+          "publishedCheck": {
+            "ok": true,
+            "status": "pass",
+            "violations": []
+          },
+          "mentions": {
+            "node": false,
+            "javascript": false,
+            "csharp": false,
+            "mvvm": false,
+            "mvc": false,
+            "graphql": false,
+            "rest": false,
+            "stripe": false,
+            "refusal": false
+          }
+        }
+      ],
+      "finalUsage": {
+        "inputTokens": 48899,
+        "outputTokens": 4394,
+        "cacheReadTokens": 26112,
+        "cacheWriteTokens": 0,
+        "totalTokens": 79405,
+        "reasoningTokens": 0
+      },
+      "finalOccupancy": 1979,
+      "messageCount": 12
+    }
+  ],
+  "set": {
+    "id": "bpmn",
+    "items": [
+      {
+        "id": "stack",
+        "type": "stack",
+        "description": "Stack: NodeJS, JavaScript"
+      },
+      {
+        "id": "arch",
+        "type": "arch",
+        "description": "Architecture: MVVM"
+      },
+      {
+        "id": "budget",
+        "type": "budget",
+        "description": "Budget: 100000$"
+      },
+      {
+        "id": "maxdeps",
+        "type": "maxdeps",
+        "description": "MaxDeps <= 5"
+      },
+      {
+        "id": "nobanned",
+        "type": "nobanned",
+        "description": "NoBanned: RxJava"
+      },
+      {
+        "id": "decision",
+        "type": "decision",
+        "description": "Decision: REST без GraphQL"
+      },
+      {
+        "id": "apis",
+        "type": "apis",
+        "description": "APIs: только бесплатные API"
+      }
+    ]
+  },
+  "atEnd": "2026-09-18T18:03:52.280Z"
+}
