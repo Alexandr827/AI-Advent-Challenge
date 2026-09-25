@@ -1,0 +1,147 @@
+{
+  "nextId": 5,
+  "agents": [
+    {
+      "id": "1",
+      "name": "mcp-demo",
+      "model": "composer-2.5",
+      "systemPrompt": "Отвечай по-русски. Доступны только MCP-инструменты сервера demo-mcp: add, echo, device_time, city_time, git_status. Для арифметики вызывай add. Не подставляй число, которого инструмент не вернул.",
+      "runtime": "local",
+      "sdkAgentId": "agent-a6ced6db-cf2d-4f23-b5b3-7d836d4591f5",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Вызови MCP-инструмент add сервера demo-mcp с аргументами a=17 и b=25. Не складывай числа сам. Дождись текста инструмента. В финальном ответе ровно одна строка: Сумма: <дословный текст инструмента>.",
+          "ts": 1790091866459
+        },
+        {
+          "role": "assistant",
+          "content": "Сумма: 42",
+          "ts": 1790091866459
+        }
+      ],
+      "compress": false,
+      "compressEvery": 4,
+      "summary": "",
+      "summarizedCount": 0,
+      "usage": {
+        "inputTokens": 15957,
+        "outputTokens": 294,
+        "cacheReadTokens": 8064,
+        "cacheWriteTokens": 0,
+        "totalTokens": 24315,
+        "reasoningTokens": 0
+      },
+      "lastTurn": {
+        "requestEstimated": 99,
+        "requestBilled": 15957,
+        "responseEstimated": 3,
+        "responseBilled": 294,
+        "billedReported": true
+      },
+      "contextLimit": null,
+      "strategy": "full",
+      "window": 8,
+      "facts": {},
+      "memory": {
+        "short": {
+          "entries": {}
+        },
+        "working": {
+          "task": "",
+          "entries": {},
+          "machine": {
+            "task": "",
+            "state": "planning",
+            "step": 0,
+            "total": 0,
+            "plan": [],
+            "done": [],
+            "current": ""
+          }
+        },
+        "long": {
+          "profile": {},
+          "decisions": {},
+          "knowledge": {}
+        }
+      },
+      "profileId": "",
+      "invariantSetId": "",
+      "checkpoint": null,
+      "branches": null,
+      "currentBranch": null
+    },
+    {
+      "id": "4",
+      "name": "mcp-git",
+      "model": "composer-2.5",
+      "systemPrompt": "Отвечай по-русски. Для вопросов о статусе репозитория вызывай только MCP-инструмент git_status и опирайся на его текст.",
+      "runtime": "local",
+      "sdkAgentId": "agent-b084c8c2-e7a2-486f-afd4-695eecfe5731",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Вызови MCP-инструмент git_status сервера demo-mcp. Параметр repo не передавай: сервер сам возьмёт каталог проекта. Другие инструменты не используй. Когда получишь результат, первой строкой ответа напиши дословно первую строку вывода git_status. Второй строкой одной фразой скажи, есть ли незакоммиченные изменения.",
+          "ts": 1790345420682
+        },
+        {
+          "role": "assistant",
+          "content": "## No commits yet on main\n\nДа, в репозитории есть незакоммиченные изменения: проиндексированные, изменённые и неотслеживаемые файлы.",
+          "ts": 1790345420682
+        }
+      ],
+      "compress": false,
+      "compressEvery": 4,
+      "summary": "",
+      "summarizedCount": 0,
+      "usage": {
+        "inputTokens": 16145,
+        "outputTokens": 354,
+        "cacheReadTokens": 6784,
+        "cacheWriteTokens": 0,
+        "totalTokens": 23283,
+        "reasoningTokens": 0
+      },
+      "lastTurn": {
+        "requestEstimated": 109,
+        "requestBilled": 16145,
+        "responseEstimated": 33,
+        "responseBilled": 354,
+        "billedReported": true
+      },
+      "contextLimit": null,
+      "strategy": "full",
+      "window": 8,
+      "facts": {},
+      "memory": {
+        "short": {
+          "entries": {}
+        },
+        "working": {
+          "task": "",
+          "entries": {},
+          "machine": {
+            "task": "",
+            "state": "planning",
+            "step": 0,
+            "total": 0,
+            "plan": [],
+            "done": [],
+            "current": ""
+          }
+        },
+        "long": {
+          "profile": {},
+          "decisions": {},
+          "knowledge": {}
+        }
+      },
+      "profileId": "",
+      "invariantSetId": "",
+      "checkpoint": null,
+      "branches": null,
+      "currentBranch": null
+    }
+  ]
+}
