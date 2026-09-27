@@ -1,0 +1,13 @@
+---
+description: "Style rules for user alex"
+alwaysApply: true
+kind: style
+user: alex
+---
+
+# Style
+
+- length: brief
+- tone: casual
+- examples: code
+- language: ru

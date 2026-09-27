@@ -1,0 +1,70 @@
+{
+  "nextId": 58,
+  "agents": [
+    {
+      "id": "57",
+      "name": "pipeline",
+      "model": "composer-2.5",
+      "systemPrompt": "",
+      "runtime": "local",
+      "sdkAgentId": null,
+      "messages": [
+        {
+          "role": "user",
+          "content": "найти в проекте nodejsproject про реализацию фичи стратегия, краткой резюмируй и сохрани в виде файла в папке проекта. Напиши где именно сохранил суммаризированный файл",
+          "ts": 1790514640437
+        },
+        {
+          "role": "assistant",
+          "content": "mcp-tool search_feature отработал (сервер demo-mcp, mcp-client → mcp-server).\nmcp-tool summarize_feature отработал (сервер demo-mcp, mcp-client → mcp-server).\nmcp-tool saveToFile отработал (сервер demo-mcp, mcp-client → mcp-server).\n\nСохранено: /Users/alex/nodeJsProject/стратегия.md\n",
+          "ts": 1790514640437
+        }
+      ],
+      "compress": false,
+      "compressEvery": 4,
+      "summary": "",
+      "summarizedCount": 0,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "totalTokens": 0,
+        "reasoningTokens": 0
+      },
+      "lastTurn": null,
+      "contextLimit": null,
+      "strategy": "full",
+      "window": 8,
+      "facts": {},
+      "memory": {
+        "short": {
+          "entries": {}
+        },
+        "working": {
+          "task": "",
+          "entries": {},
+          "machine": {
+            "task": "",
+            "state": "planning",
+            "step": 0,
+            "total": 0,
+            "plan": [],
+            "done": [],
+            "current": ""
+          }
+        },
+        "long": {
+          "profile": {},
+          "decisions": {},
+          "knowledge": {}
+        }
+      },
+      "profileId": "",
+      "invariantSetId": "",
+      "checkpoint": null,
+      "branches": null,
+      "currentBranch": null
+    }
+  ]
+}
