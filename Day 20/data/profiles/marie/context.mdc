@@ -1,0 +1,13 @@
+---
+description: "Context rules for user marie"
+alwaysApply: true
+kind: context
+user: marie
+---
+
+# Context
+
+- role: staff backend engineer
+- project: ML feature store and inference gateway
+- team: 20 человек
+- deadline: 6 месяцев

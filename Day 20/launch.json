@@ -1,0 +1,22 @@
+{
+  // for backend development on node.js
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Запуск Node.js сервера",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/src/index.js",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    }
+  ],
+  // for frontend development on React
+  "type": "chrome",
+  "request": "launch",
+  "name": "Запуск React в Chrome",
+  "url": "http://localhost:3000", // или 5173 для Vite
+  "webRoot": "${workspaceFolder}/src"
+}
