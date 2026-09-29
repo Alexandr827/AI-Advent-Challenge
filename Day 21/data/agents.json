@@ -1,0 +1,70 @@
+{
+  "nextId": 61,
+  "agents": [
+    {
+      "id": "60",
+      "name": "orchestrator",
+      "model": "composer-2.5",
+      "systemPrompt": "",
+      "runtime": "local",
+      "sdkAgentId": null,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Запиши мне результаты по прогнозу погоды в Москве 25 сентября 2026 года в 18 часов 26 минут по часовому поясу самой Москвы. Резульаты прогноза сохрани в отдельный файл внутри проекта",
+          "ts": 1790524038613
+        },
+        {
+          "role": "assistant",
+          "content": "mcp-tool geocode отработал (сервер weather-mcp, mcp-client → mcp-server).\nmcp-tool forecast отработал (сервер weather-mcp, mcp-client → mcp-server).\nmcp-tool save_brief отработал (сервер brief-mcp, mcp-client → mcp-server).\n\nСохранено: /Users/alex/nodeJsProject/погода_Москва.md\n",
+          "ts": 1790524038613
+        }
+      ],
+      "compress": false,
+      "compressEvery": 4,
+      "summary": "",
+      "summarizedCount": 0,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "totalTokens": 0,
+        "reasoningTokens": 0
+      },
+      "lastTurn": null,
+      "contextLimit": null,
+      "strategy": "full",
+      "window": 8,
+      "facts": {},
+      "memory": {
+        "short": {
+          "entries": {}
+        },
+        "working": {
+          "task": "",
+          "entries": {},
+          "machine": {
+            "task": "",
+            "state": "planning",
+            "step": 0,
+            "total": 0,
+            "plan": [],
+            "done": [],
+            "current": ""
+          }
+        },
+        "long": {
+          "profile": {},
+          "decisions": {},
+          "knowledge": {}
+        }
+      },
+      "profileId": "",
+      "invariantSetId": "",
+      "checkpoint": null,
+      "branches": null,
+      "currentBranch": null
+    }
+  ]
+}

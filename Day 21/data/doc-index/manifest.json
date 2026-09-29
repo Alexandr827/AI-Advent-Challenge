@@ -1,0 +1,34 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "source": "readme",
+      "title": null,
+      "strategy": "fixed"
+    },
+    {
+      "path": "стратегия.md",
+      "source": null,
+      "title": null,
+      "strategy": "both"
+    },
+    {
+      "path": "src/doc-index/chunk.js",
+      "source": null,
+      "title": null,
+      "strategy": "both"
+    },
+    {
+      "path": "docs/sample.pdf",
+      "source": null,
+      "title": null,
+      "strategy": "both"
+    },
+    {
+      "path": "38FL.txt",
+      "source": "txt",
+      "title": null,
+      "strategy": "both"
+    }
+  ]
+}
