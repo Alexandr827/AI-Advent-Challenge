@@ -1,0 +1,141 @@
+{
+  "nextId": 63,
+  "agents": [
+    {
+      "id": "60",
+      "name": "orchestrator",
+      "model": "composer-2.5",
+      "systemPrompt": "",
+      "runtime": "local",
+      "sdkAgentId": null,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Запиши мне результаты по прогнозу погоды в Москве 25 сентября 2026 года в 18 часов 26 минут по часовому поясу самой Москвы. Резульаты прогноза сохрани в отдельный файл внутри проекта",
+          "ts": 1790524038613
+        },
+        {
+          "role": "assistant",
+          "content": "mcp-tool geocode отработал (сервер weather-mcp, mcp-client → mcp-server).\nmcp-tool forecast отработал (сервер weather-mcp, mcp-client → mcp-server).\nmcp-tool save_brief отработал (сервер brief-mcp, mcp-client → mcp-server).\n\nСохранено: /Users/alex/nodeJsProject/погода_Москва.md\n",
+          "ts": 1790524038613
+        }
+      ],
+      "compress": false,
+      "compressEvery": 4,
+      "summary": "",
+      "summarizedCount": 0,
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "totalTokens": 0,
+        "reasoningTokens": 0
+      },
+      "lastTurn": null,
+      "contextLimit": null,
+      "strategy": "full",
+      "window": 8,
+      "facts": {},
+      "memory": {
+        "short": {
+          "entries": {}
+        },
+        "working": {
+          "task": "",
+          "entries": {},
+          "machine": {
+            "task": "",
+            "state": "planning",
+            "step": 0,
+            "total": 0,
+            "plan": [],
+            "done": [],
+            "current": ""
+          }
+        },
+        "long": {
+          "profile": {},
+          "decisions": {},
+          "knowledge": {}
+        }
+      },
+      "profileId": "",
+      "invariantSetId": "",
+      "checkpoint": null,
+      "branches": null,
+      "currentBranch": null
+    },
+    {
+      "id": "62",
+      "name": "law",
+      "model": "composer-2.5",
+      "systemPrompt": "",
+      "runtime": "local",
+      "sdkAgentId": "agent-b422523b-053c-44cf-a3c5-6988e2349965",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Как в основных понятиях закона определены реклама и объект рекламирования?",
+          "ts": 1791009895192
+        },
+        {
+          "role": "assistant",
+          "content": "**Ответ:** По **ст. 3** Федерального закона «О рекламе» **реклама** — это информация, распространённая любым способом, в любой форме и с использованием любых средств, адресованная неопределённому кругу лиц и направленная на привлечение внимания к объекту рекламирования, формирование или поддержание интереса к нему и его продвижение на рынке. **Объект рекламирования** — товар, средства индивидуализации юридического лица и (или) товара, изготовитель или продавец товара, результаты интеллектуальной деятельности либо мероприятие (в том числе спортивное соревнование, концерт, конкурс, фестиваль, основанные на риске игры, пари), на привлечение внимания к которым направлена реклама.\n\n**Источники:**\n- 38-ФЗ | Статья 3. Основные понятия, используемые в настоящем Федеральном законе | structural:docs/fz-38-o-reklame.md:6\n- 38-ФЗ | Статья 3. Основные понятия, используемые в настоящем Федеральном законе | structural:docs/fz-38-o-reklame.md:7\n\n**Цитаты:**\n- [structural:docs/fz-38-o-reklame.md:6] «1. реклама - информация, распространенная любым способом, в любой форме и с использованием любых средств, адресованная неопределенному кругу лиц и направленная на привлечение внимания к объекту рекламирования, формирование или поддержание интереса к нему и его продвижение на рынке;»\n- [structural:docs/fz-38-o-reklame.md:7] «2. объект рекламирования - товар, средства индивидуализации юридического лица и (или) товара, изготовитель или продавец товара, результаты интеллектуальной деятельности либо мероприятие (в том числе спортивное соревнование, концерт, конкурс, фестиваль, основанные на риске игры, пари), на привлечение внимания к которым направлена реклама;»",
+          "ts": 1791009895192
+        }
+      ],
+      "compress": false,
+      "compressEvery": 4,
+      "summary": "",
+      "summarizedCount": 0,
+      "usage": {
+        "inputTokens": 254547,
+        "outputTokens": 21627,
+        "cacheReadTokens": 65472,
+        "cacheWriteTokens": 0,
+        "totalTokens": 341646,
+        "reasoningTokens": 0
+      },
+      "lastTurn": {
+        "requestEstimated": 1799,
+        "requestBilled": 6395,
+        "responseEstimated": 416,
+        "responseBilled": 876,
+        "billedReported": true
+      },
+      "contextLimit": null,
+      "strategy": "sliding",
+      "window": 2,
+      "facts": {},
+      "memory": {
+        "short": {
+          "entries": {}
+        },
+        "working": {
+          "task": "",
+          "entries": {},
+          "machine": {
+            "task": "",
+            "state": "planning",
+            "step": 0,
+            "total": 0,
+            "plan": [],
+            "done": [],
+            "current": ""
+          }
+        },
+        "long": {
+          "profile": {},
+          "decisions": {},
+          "knowledge": {}
+        }
+      },
+      "profileId": "",
+      "invariantSetId": "",
+      "checkpoint": null,
+      "branches": null,
+      "currentBranch": null
+    }
+  ]
+}
