@@ -1,0 +1,13 @@
+---
+description: "Style rules for user marie"
+alwaysApply: true
+kind: style
+user: marie
+---
+
+# Style
+
+- length: detailed
+- tone: formal
+- examples: none
+- language: en
