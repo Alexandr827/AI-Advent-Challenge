@@ -1,0 +1,39 @@
+{
+  "name": "cursor-cloud-min",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "mcp:tools": "node src/mcp-client.js",
+    "mcp:agent": "node scripts/mcp-agent-cycle.js",
+    "mcp:reminder-loop": "node scripts/reminder-loop.js",
+    "mcp:pipeline": "node scripts/mcp-pipeline.js",
+    "mcp:ask": "node scripts/mcp-ask-chain.js",
+    "mcp:orchestrate": "node scripts/mcp-orchestrate.js",
+    "index:docs": "node scripts/index-docs.js",
+    "rag:bench": "node scripts/rag-benchmark.js",
+    "rag:filter": "node scripts/rag-filter-benchmark.js",
+    "rag:cite": "node scripts/rag-cite-benchmark.js",
+    "rag:chat": "node scripts/rag-chat-scenarios.js",
+    "rag:local": "node scripts/rag-local-benchmark.js",
+    "rag:day28": "node scripts/rag-day28-compare.js",
+    "rag:day29": "node scripts/rag-day29-compare.js",
+    "rag:day29:three": "node scripts/rag-day29-three.js",
+    "bench:strategy": "node scripts/strategy-benchmark.js",
+    "bench:memory": "node scripts/memory-benchmark.js",
+    "bench:invariant": "node scripts/invariant-benchmark.js",
+    "cycle:task": "node scripts/task-lifecycle-cycle.js",
+    "cycle:invariant": "node scripts/rest-api-invariant-cycle.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.30",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "unpdf": "^1.8.1",
+    "zod": "^4.6.5"
+  }
+}
