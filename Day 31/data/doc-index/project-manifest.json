@@ -1,0 +1,22 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "role": "doc",
+      "kind": "md",
+      "title": "Day 31 — Ассистент разработчика"
+    },
+    {
+      "path": "docs/fz-38-o-reklame.md",
+      "role": "doc",
+      "kind": "md",
+      "title": "fz-38-o-reklame.md"
+    },
+    {
+      "path": "docs/sample.pdf",
+      "role": "doc",
+      "kind": "pdf",
+      "title": "sample.pdf"
+    }
+  ]
+}

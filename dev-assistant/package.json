@@ -1,0 +1,19 @@
+{
+  "name": "dev-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "index": "node scripts/index.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "unpdf": "^1.8.1",
+    "zod": "^4.6.5"
+  }
+}
