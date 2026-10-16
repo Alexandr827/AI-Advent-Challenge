@@ -1,0 +1,1482 @@
+{
+  "model": "composer-2.5",
+  "runtime": "local",
+  "at": "2026-09-15T16:20:31.403Z",
+  "systemPrompt": "Отвечай по-русски. Опирайся только на факты из контекста и из блоков памяти. Если факта нет — напиши «нет в контексте», не выдумывай.",
+  "questions": [
+    "Меня зовут Алексей. Отвечай кратко, по-русски, без воды.",
+    "Задача: спроектировать REST API списка задач. Ограничение: без внешних сервисов и без ORM.",
+    "Решили: аутентификация только JWT, ресурс задач — /tasks.",
+    "Статусы задачи: todo, doing, done. Зафиксируй это как договорённость.",
+    "Набросай эндпоинты списка задач, опираясь на то, что уже сказано.",
+    "Как меня зовут и в каком стиле отвечать? Какой auth и путь ресурса? Цель задачи и ограничения? Какие статусы? Нет в контексте — так и скажи.",
+    "Как меня зовут и в каком стиле отвечать? Какой auth и путь ресурса? Цель задачи и ограничения? Какие статусы? Нет в контексте — так и скажи.",
+    "Напомни цель текущей задачи и ограничение про ORM. Напомни auth и как меня зовут. Нет в контексте — так и скажи."
+  ],
+  "agents": [
+    {
+      "name": "mem-off",
+      "useMemory": false,
+      "turns": [
+        {
+          "step": 1,
+          "label": "setup",
+          "query": "Меня зовут Алексей. Отвечай кратко, по-русски, без воды.",
+          "elapsedMs": 8173,
+          "replyChars": 132,
+          "replyPreview": "Понял, Алексей. Буду отвечать по-русски, кратко, только по фактам из контекста и памяти. Если факта нет — напишу «нет в контексте».",
+          "reply": "Понял, Алексей.\n\nБуду отвечать по-русски, кратко, только по фактам из контекста и памяти. Если факта нет — напишу «нет в контексте».",
+          "requestEstimated": 48,
+          "requestBilled": 3473,
+          "responseEstimated": 33,
+          "responseBilled": 135,
+          "occupancy": 86,
+          "percent": 0,
+          "promptMessageCount": 2,
+          "messageCount": 2,
+          "usageTotal": 4024,
+          "usageInput": 3473,
+          "usageOutput": 135,
+          "memory": {
+            "messages": 2,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 2,
+          "label": "setup",
+          "query": "Задача: спроектировать REST API списка задач. Ограничение: без внешних сервисов и без ORM.",
+          "elapsedMs": 7204,
+          "replyChars": 1591,
+          "replyPreview": "## REST API списка задач **Ограничения:** без внешних сервисов, без ORM. **Проект:** в репозитории есть `src/store.js`, `src/memory.js` — их содержимое **нет в контексте**, привязку к ним не описываю. ### Ресурс `Task` | Поле | Тип | Описание | |------|-----|----------| | `id` | string (UUID) | только сервер | | `title` | string | обязательно, 1–500 символов | | `completed` | boolean | по умолчани…",
+          "reply": "## REST API списка задач\n\n**Ограничения:** без внешних сервисов, без ORM.  \n**Проект:** в репозитории есть `src/store.js`, `src/memory.js` — их содержимое **нет в контексте**, привязку к ним не описываю.\n\n### Ресурс `Task`\n\n| Поле | Тип | Описание |\n|------|-----|----------|\n| `id` | string (UUID) | только сервер |\n| `title` | string | обязательно, 1–500 символов |\n| `completed` | boolean | по умолчанию `false` |\n| `createdAt` | ISO 8601 | только сервер |\n| `updatedAt` | ISO 8601 | только сервер |\n\n### Эндпоинты\n\n| Метод | Путь | Назначение |\n|-------|------|------------|\n| `GET` | `/tasks` | Список. Query: `completed=true\\|false`, `limit`, `offset` |\n| `GET` | `/tasks/:id` | Одна задача |\n| `POST` | `/tasks` | Создание. Body: `{ \"title\": \"...\" }` |\n| `PATCH` | `/tasks/:id` | Частичное обновление: `title`, `completed` |\n| `DELETE` | `/tasks/:id` | Удаление |\n\n### Ответы\n\n- Успех: `200` (GET/PATCH), `201` + `Location` (POST), `204` (DELETE).\n- Ошибки: JSON `{ \"error\": { \"code\": \"...\", \"message\": \"...\" } }` — `400`, `404`, `409` (если нужен), `500`.\n\n### Хранение (без ORM и внешних сервисов)\n\n- **SQLite** через `node:sqlite` / `better-sqlite3` и обычный SQL, или  \n- **JSON-файл** + блокировка/`fs` + загрузка в память при старте.\n\nСлой: `router` → `TaskService` → `TaskRepository` (SQL или файл).\n\n### Прочее\n\n- `Content-Type: application/json`\n- Валидация в middleware или в сервисе до репозитория\n- `GET /health` — опционально, для проверки процесса\n\nНужна схема OpenAPI или скелет роутов под ваш `src/` — напишите, есть ли уже HTTP-сервер в проекте (**нет в контексте**).",
+          "requestEstimated": 109,
+          "requestBilled": 11624,
+          "responseEstimated": 398,
+          "responseBilled": 1088,
+          "occupancy": 511,
+          "percent": 0,
+          "promptMessageCount": 4,
+          "messageCount": 4,
+          "usageTotal": 17984,
+          "usageInput": 15097,
+          "usageOutput": 1223,
+          "memory": {
+            "messages": 4,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 3,
+          "label": "setup",
+          "query": "Решили: аутентификация только JWT, ресурс задач — /tasks.",
+          "elapsedMs": 3599,
+          "replyChars": 1361,
+          "replyPreview": "## Уточнения **Ресурс задач:** `/tasks` (как раньше: GET/POST, `GET/PATCH/DELETE /tasks/:id`). **Аутентификация:** только JWT. ### JWT - Заголовок: `Authorization: Bearer <token>`. - Без валидного токена на `/tasks*` → **401** `{ \"error\": { \"code\": \"UNAUTHORIZED\", \"message\": \"...\" } }`. - Истёкший/битая подпись → **401**; при необходимости отдельный код вроде `TOKEN_EXPIRED` — **нет в контексте**,…",
+          "reply": "## Уточнения\n\n**Ресурс задач:** `/tasks` (как раньше: GET/POST, `GET/PATCH/DELETE /tasks/:id`).\n\n**Аутентификация:** только JWT.\n\n### JWT\n\n- Заголовок: `Authorization: Bearer <token>`.\n- Без валидного токена на `/tasks*` → **401** `{ \"error\": { \"code\": \"UNAUTHORIZED\", \"message\": \"...\" } }`.\n- Истёкший/битая подпись → **401**; при необходимости отдельный код вроде `TOKEN_EXPIRED` — **нет в контексте**, зафиксируйте сами.\n\n### Эндпоинты без JWT (типично)\n\n| Метод | Путь | Назначение |\n|-------|------|------------|\n| `POST` | `/auth/login` | Логин → `{ \"accessToken\", \"expiresIn\"? }` |\n| `POST` | `/auth/register` | Регистрация — **нет в контексте**, нужен ли |\n\nRefresh-токены, OAuth, внешний IdP — **не используем** (только JWT).\n\n### Задачи и пользователь\n\n- После проверки JWT в `req.user` кладётся идентификатор из payload (например `sub`).\n- Список и CRUD только по задачам этого `sub`; чужой `:id` → **404** (или **403** — **нет в контексте**, выберите одну политику).\n\n### Payload JWT (минимум)\n\n- `sub` — id пользователя  \n- `exp` — срок  \n- `iat` — опционально  \n\nАлгоритм и секрет — из env на сервере, без внешних сервисов.\n\n### Порядок middleware\n\n`json()` → `jwtAuth` (кроме `/auth/*`, `/health`) → роуты `/tasks`.\n\nЕсли нужно — следующий шаг: контракт login/register или таблицы users/tasks под SQLite без ORM (**детали БД — нет в контексте**).",
+          "requestEstimated": 526,
+          "requestBilled": 4903,
+          "responseEstimated": 341,
+          "responseBilled": 556,
+          "occupancy": 871,
+          "percent": 0,
+          "promptMessageCount": 6,
+          "messageCount": 6,
+          "usageTotal": 23859,
+          "usageInput": 20000,
+          "usageOutput": 1779,
+          "memory": {
+            "messages": 6,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 4,
+          "label": "setup",
+          "query": "Статусы задачи: todo, doing, done. Зафиксируй это как договорённость.",
+          "elapsedMs": 2285,
+          "replyChars": 729,
+          "replyPreview": "## Договорённость: статус задачи **Поле:** `status` (строка, enum). **Допустимые значения:** | Значение | Смысл | |----------|--------| | `todo` | Не начата | | `doing` | В работе | | `done` | Завершена | **Правила:** - При создании (`POST /tasks`) по умолчанию **`todo`**, если `status` не передан. - В `PATCH /tasks/:id` можно менять только на одно из трёх значений; иначе **400**. - Поле **`comple…",
+          "reply": "## Договорённость: статус задачи\n\n**Поле:** `status` (строка, enum).\n\n**Допустимые значения:**\n\n| Значение | Смысл |\n|----------|--------|\n| `todo` | Не начата |\n| `doing` | В работе |\n| `done` | Завершена |\n\n**Правила:**\n\n- При создании (`POST /tasks`) по умолчанию **`todo`**, если `status` не передан.\n- В `PATCH /tasks/:id` можно менять только на одно из трёх значений; иначе **400**.\n- Поле **`completed` (boolean) не используем** — только `status`.\n- В `GET /tasks` фильтр: query `status=todo|doing|done` (при необходимости несколько значений — **нет в контексте**, не зафиксировано).\n\n**Пример тела задачи:**\n\n```json\n{\n  \"id\": \"...\",\n  \"title\": \"...\",\n  \"status\": \"doing\",\n  \"createdAt\": \"...\",\n  \"updatedAt\": \"...\"\n}\n```",
+          "requestEstimated": 889,
+          "requestBilled": 5522,
+          "responseEstimated": 183,
+          "responseBilled": 313,
+          "occupancy": 1076,
+          "percent": 1,
+          "promptMessageCount": 8,
+          "messageCount": 8,
+          "usageTotal": 34622,
+          "usageInput": 25522,
+          "usageOutput": 2092,
+          "memory": {
+            "messages": 8,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 5,
+          "label": "endpoints",
+          "query": "Набросай эндпоинты списка задач, опираясь на то, что уже сказано.",
+          "elapsedMs": 5232,
+          "replyChars": 1725,
+          "replyPreview": "## Эндпоинты (по договорённостям) ### Аутентификация | Метод | Путь | Auth | Тело / ответ | |-------|------|------|----------------| | `POST` | `/auth/login` | нет | In: `{ \"email\"?, \"password\"? }` — точные поля **нет в контексте**. Out: `{ \"accessToken\", \"expiresIn\"? }` | --- ### Задачи `/tasks` Все методы ниже: **`Authorization: Bearer <JWT>`**, иначе **401**. Данные только для `sub` из токена. …",
+          "reply": "## Эндпоинты (по договорённостям)\n\n### Аутентификация\n\n| Метод | Путь | Auth | Тело / ответ |\n|-------|------|------|----------------|\n| `POST` | `/auth/login` | нет | In: `{ \"email\"?, \"password\"? }` — точные поля **нет в контексте**. Out: `{ \"accessToken\", \"expiresIn\"? }` |\n\n---\n\n### Задачи `/tasks`\n\nВсе методы ниже: **`Authorization: Bearer <JWT>`**, иначе **401**. Данные только для `sub` из токена.\n\n| Метод | Путь | Назначение |\n|-------|------|------------|\n| `GET` | `/tasks` | Список задач |\n| `GET` | `/tasks/:id` | Одна задача |\n| `POST` | `/tasks` | Создать |\n| `PATCH` | `/tasks/:id` | Обновить |\n| `DELETE` | `/tasks/:id` | Удалить |\n\n#### `GET /tasks`\n\n- Query: `status` = `todo` | `doing` | `done` (фильтр); `limit`, `offset` — если решите пагинацию (**формат ответа при пагинации — нет в контексте**).\n- **200:** массив задач или обёртка со списком — **нет в контексте**.\n\n#### `GET /tasks/:id`\n\n- **200:** объект задачи.\n- **404:** нет задачи или не ваш `sub`.\n\n#### `POST /tasks`\n\n- In: `{ \"title\": \"...\" , \"status\"? }` — `status` по умолчанию **`todo`**.\n- **201:** созданная задача + заголовок `Location: /tasks/:id`.\n\n#### `PATCH /tasks/:id`\n\n- In: `{ \"title\"?, \"status\"? }` — `status` только `todo` | `doing` | `done`, иначе **400**.\n- **200:** обновлённая задача.\n- **404:** как у GET.\n\n#### `DELETE /tasks/:id`\n\n- **204:** без тела.\n- **404:** как у GET.\n\n---\n\n### Модель задачи в ответах\n\n```json\n{\n  \"id\": \"uuid\",\n  \"title\": \"string\",\n  \"status\": \"todo\",\n  \"createdAt\": \"ISO8601\",\n  \"updatedAt\": \"ISO8601\"\n}\n```\n\n### Ошибки\n\nJSON: `{ \"error\": { \"code\": \"...\", \"message\": \"...\" } }` — **401**, **400**, **404**, **500** (как обсуждали).\n\n`/health` — **нет в контексте**, в этот набросок не включал.",
+          "requestEstimated": 1093,
+          "requestBilled": 5900,
+          "responseEstimated": 432,
+          "responseBilled": 748,
+          "occupancy": 1529,
+          "percent": 1,
+          "promptMessageCount": 10,
+          "messageCount": 10,
+          "usageTotal": 41686,
+          "usageInput": 31422,
+          "usageOutput": 2840,
+          "memory": {
+            "messages": 10,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 6,
+          "label": "probe-A",
+          "query": "Как меня зовут и в каком стиле отвечать? Какой auth и путь ресурса? Цель задачи и ограничения? Какие статусы? Нет в контексте — так и скажи.",
+          "elapsedMs": 3213,
+          "replyChars": 654,
+          "replyPreview": "| Вопрос | Ответ | |--------|--------| | **Имя** | Алексей | | **Стиль** | По-русски, кратко, без воды; только факты из контекста/памяти; если факта нет — «нет в контексте», не выдумывать | | **Auth** | Только JWT (`Authorization: Bearer`) | | **Путь ресурса** | `/tasks` | | **Цель** | Спроектировать REST API списка задач | | **Ограничения** | Без внешних сервисов, без ORM | | **Статусы** | `todo`…",
+          "reply": "| Вопрос | Ответ |\n|--------|--------|\n| **Имя** | Алексей |\n| **Стиль** | По-русски, кратко, без воды; только факты из контекста/памяти; если факта нет — «нет в контексте», не выдумывать |\n| **Auth** | Только JWT (`Authorization: Bearer`) |\n| **Путь ресурса** | `/tasks` |\n| **Цель** | Спроектировать REST API списка задач |\n| **Ограничения** | Без внешних сервисов, без ORM |\n| **Статусы** | `todo`, `doing`, `done` (поле `status`, по умолчанию при создании — `todo`) |\n\n**Нет в контексте:** refresh-токены, register, точные поля login, SQLite vs JSON, пагинация, `/health`, 404 vs 403 для чужих задач, содержимое `store.js` / реализация в репозитории.",
+          "requestEstimated": 1564,
+          "requestBilled": 6746,
+          "responseEstimated": 164,
+          "responseBilled": 394,
+          "occupancy": 1732,
+          "percent": 1,
+          "promptMessageCount": 12,
+          "messageCount": 12,
+          "usageTotal": 49242,
+          "usageInput": 38168,
+          "usageOutput": 3234,
+          "memory": {
+            "messages": 12,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": [
+            {
+              "id": "name",
+              "label": "Алексей",
+              "hit": true
+            },
+            {
+              "id": "style",
+              "label": "кратко / без воды",
+              "hit": true
+            },
+            {
+              "id": "jwt",
+              "label": "JWT",
+              "hit": true
+            },
+            {
+              "id": "tasks",
+              "label": "/tasks",
+              "hit": true
+            },
+            {
+              "id": "goal",
+              "label": "цель REST API / список задач",
+              "hit": true
+            },
+            {
+              "id": "orm",
+              "label": "без ORM / внешних сервисов",
+              "hit": true
+            },
+            {
+              "id": "todo",
+              "label": "статусы todo/doing/done",
+              "hit": true
+            },
+            {
+              "id": "missing",
+              "label": "нет в контексте",
+              "hit": true
+            }
+          ]
+        },
+        {
+          "step": "forget-short",
+          "label": "forget short",
+          "memory": {
+            "messages": 0,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          }
+        },
+        {
+          "step": 7,
+          "label": "probe-B",
+          "query": "Как меня зовут и в каком стиле отвечать? Какой auth и путь ресурса? Цель задачи и ограничения? Какие статусы? Нет в контексте — так и скажи.",
+          "elapsedMs": 11207,
+          "replyChars": 1461,
+          "replyPreview": "Отвечаю только по тому, что есть в **этом диалоге** и в **переданных правилах**. Отдельные «блоки памяти» проекта (например, из `memory.js`) в сообщении **не подгружены**, файлы репозитория здесь прочитать не удалось — про их содержимое писать не буду. ### Как вас зовут и в каком стиле отвечать - **Имя:** **нет в контексте.** В данных сессии есть путь `/Users/alex/...` — это не указание, как к вам…",
+          "reply": "Отвечаю только по тому, что есть в **этом диалоге** и в **переданных правилах**. Отдельные «блоки памяти» проекта (например, из `memory.js`) в сообщении **не подгружены**, файлы репозитория здесь прочитать не удалось — про их содержимое писать не буду.\n\n### Как вас зовут и в каком стиле отвечать\n- **Имя:** **нет в контексте.** В данных сессии есть путь `/Users/alex/...` — это не указание, как к вам обращаться.\n- **Стиль:** в **этом** запросе вы просите отвечать **по-русски**, опираться только на факты из контекста/памяти, при отсутствии факта писать **«нет в контексте»**. В общих правилах чата также заданы формат цитирования кода, тон (ясно, по делу), не коммитить без явной просьбы и т.д. — это про поведение ассистента, не про ваше имя.\n\n### Auth и путь ресурса\n- **Auth:** **нет в контексте.**\n- **Путь ресурса:** **нет в контексте.**\n\n### Цель задачи и ограничения\n- **Цель:** в этом сообщении цель — **получить сводку фактов** (имя, стиль, auth, путь, цель/ограничения, статусы) **только из контекста**, без домыслов.\n- **Ограничения:** те же — не выдумывать; при отсутствии факта — **«нет в контексте»**. Другой формулировки цели задачи (API, агент, CLI и т.п.) в этом чате **нет в контексте**.\n\n### Какие статусы\n- **Статусы (перечень, коды, enum):** **нет в контексте.**\n\nЕсли нужны факты из **блоков памяти репозитория**, вставьте их текст сюда или откройте чат с подключённым контекстом проекта — тогда ответ можно будет привязать к ним точно.",
+          "requestEstimated": 69,
+          "requestBilled": 11358,
+          "responseEstimated": 366,
+          "responseBilled": 1338,
+          "occupancy": 439,
+          "percent": 0,
+          "promptMessageCount": 2,
+          "messageCount": 2,
+          "usageTotal": 70002,
+          "usageInput": 49526,
+          "usageOutput": 4572,
+          "memory": {
+            "messages": 2,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": [
+            {
+              "id": "name",
+              "label": "Алексей",
+              "hit": false
+            },
+            {
+              "id": "style",
+              "label": "кратко / без воды",
+              "hit": false
+            },
+            {
+              "id": "jwt",
+              "label": "JWT",
+              "hit": false
+            },
+            {
+              "id": "tasks",
+              "label": "/tasks",
+              "hit": false
+            },
+            {
+              "id": "goal",
+              "label": "цель REST API / список задач",
+              "hit": false
+            },
+            {
+              "id": "orm",
+              "label": "без ORM / внешних сервисов",
+              "hit": false
+            },
+            {
+              "id": "todo",
+              "label": "статусы todo/doing/done",
+              "hit": false
+            },
+            {
+              "id": "missing",
+              "label": "нет в контексте",
+              "hit": true
+            }
+          ]
+        },
+        {
+          "step": 8,
+          "label": "probe-C",
+          "query": "Напомни цель текущей задачи и ограничение про ORM. Напомни auth и как меня зовут. Нет в контексте — так и скажи.",
+          "elapsedMs": 4771,
+          "replyChars": 488,
+          "replyPreview": "Отвечаю только по **этому чату** (включая прошлое сообщение). Новых фактов вы не добавляли. | Вопрос | Ответ | |--------|--------| | **Цель текущей задачи** | **нет в контексте** как отдельной продуктовой/технической задачи. В переписке была только цель **собрать факты из контекста** без выдумок. | | **Ограничение про ORM** | **нет в контексте.** | | **Auth** | **нет в контексте.** | | **Как вас з…",
+          "reply": "Отвечаю только по **этому чату** (включая прошлое сообщение). Новых фактов вы не добавляли.\n\n| Вопрос | Ответ |\n|--------|--------|\n| **Цель текущей задачи** | **нет в контексте** как отдельной продуктовой/технической задачи. В переписке была только цель **собрать факты из контекста** без выдумок. |\n| **Ограничение про ORM** | **нет в контексте.** |\n| **Auth** | **нет в контексте.** |\n| **Как вас зовут** | **нет в контексте.** Путь ` /Users/alex/... ` — не указание, как обращаться. |",
+          "requestEstimated": 468,
+          "requestBilled": 5008,
+          "responseEstimated": 122,
+          "responseBilled": 406,
+          "occupancy": 594,
+          "percent": 0,
+          "promptMessageCount": 4,
+          "messageCount": 4,
+          "usageTotal": 79736,
+          "usageInput": 54534,
+          "usageOutput": 4978,
+          "memory": {
+            "messages": 4,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": [
+            {
+              "id": "name",
+              "label": "Алексей",
+              "hit": false
+            },
+            {
+              "id": "style",
+              "label": "кратко / без воды",
+              "hit": false
+            },
+            {
+              "id": "jwt",
+              "label": "JWT",
+              "hit": false
+            },
+            {
+              "id": "tasks",
+              "label": "/tasks",
+              "hit": false
+            },
+            {
+              "id": "goal",
+              "label": "цель REST API / список задач",
+              "hit": false
+            },
+            {
+              "id": "orm",
+              "label": "без ORM / внешних сервисов",
+              "hit": true
+            },
+            {
+              "id": "todo",
+              "label": "статусы todo/doing/done",
+              "hit": false
+            },
+            {
+              "id": "missing",
+              "label": "нет в контексте",
+              "hit": true
+            }
+          ]
+        }
+      ],
+      "probeHits": {
+        "6": [
+          "name",
+          "style",
+          "jwt",
+          "tasks",
+          "goal",
+          "orm",
+          "todo",
+          "missing"
+        ],
+        "7": [
+          "missing"
+        ],
+        "8": [
+          "orm",
+          "missing"
+        ]
+      },
+      "memoryAfterSetup": null,
+      "memoryAfterForget": {
+        "messages": 0,
+        "memory": {
+          "short": {
+            "entries": {}
+          },
+          "working": {
+            "task": "",
+            "entries": {}
+          },
+          "long": {
+            "profile": {},
+            "decisions": {},
+            "knowledge": {}
+          }
+        },
+        "counts": {
+          "short": 0,
+          "working": 0,
+          "long": 0,
+          "longProfile": 0,
+          "longDecisions": 0,
+          "longKnowledge": 0,
+          "task": ""
+        }
+      },
+      "memoryAfterNewTask": null,
+      "finalUsage": {
+        "inputTokens": 54534,
+        "outputTokens": 4978,
+        "cacheReadTokens": 20224,
+        "cacheWriteTokens": 0,
+        "totalTokens": 79736,
+        "reasoningTokens": 0
+      },
+      "finalOccupancy": 594,
+      "messageCount": 4,
+      "memory": {
+        "messages": 4,
+        "memory": {
+          "short": {
+            "entries": {}
+          },
+          "working": {
+            "task": "",
+            "entries": {}
+          },
+          "long": {
+            "profile": {},
+            "decisions": {},
+            "knowledge": {}
+          }
+        },
+        "counts": {
+          "short": 0,
+          "working": 0,
+          "long": 0,
+          "longProfile": 0,
+          "longDecisions": 0,
+          "longKnowledge": 0,
+          "task": ""
+        }
+      }
+    },
+    {
+      "name": "mem-on",
+      "useMemory": true,
+      "turns": [
+        {
+          "step": 1,
+          "label": "setup",
+          "query": "Меня зовут Алексей. Отвечай кратко, по-русски, без воды.",
+          "elapsedMs": 3496,
+          "replyChars": 133,
+          "replyPreview": "Понял, Алексей. Буду отвечать кратко по-русски, только по фактам из контекста; если факта нет — напишу «нет в контексте». Чем помочь?",
+          "reply": "Понял, Алексей. Буду отвечать кратко по-русски, только по фактам из контекста; если факта нет — напишу «нет в контексте». Чем помочь?",
+          "requestEstimated": 48,
+          "requestBilled": 3473,
+          "responseEstimated": 34,
+          "responseBilled": 137,
+          "occupancy": 86,
+          "percent": 0,
+          "promptMessageCount": 2,
+          "messageCount": 2,
+          "usageTotal": 4026,
+          "usageInput": 3473,
+          "usageOutput": 137,
+          "memory": {
+            "messages": 2,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 2,
+          "label": "setup",
+          "query": "Задача: спроектировать REST API списка задач. Ограничение: без внешних сервисов и без ORM.",
+          "elapsedMs": 6115,
+          "replyChars": 1645,
+          "replyPreview": "**REST API: список задач** (без внешних сервисов, без ORM) Детали текущего `store.js` / `index.js` в этом чате не загружены — **нет в контексте**, как именно у вас уже устроено хранение. ### Ресурс `Task`: `id`, `title`, `done` (bool), `createdAt`, `updatedAt` (ISO 8601). ### Эндпоинты | Метод | Путь | Назначение | |--------|------|------------| | GET | `/tasks` | Список. Query: `?done=true\\|false…",
+          "reply": "**REST API: список задач** (без внешних сервисов, без ORM)\n\nДетали текущего `store.js` / `index.js` в этом чате не загружены — **нет в контексте**, как именно у вас уже устроено хранение.\n\n### Ресурс\n`Task`: `id`, `title`, `done` (bool), `createdAt`, `updatedAt` (ISO 8601).\n\n### Эндпоинты\n\n| Метод | Путь | Назначение |\n|--------|------|------------|\n| GET | `/tasks` | Список. Query: `?done=true\\|false`, `?limit=&offset=` |\n| GET | `/tasks/:id` | Одна задача |\n| POST | `/tasks` | Создать. Body: `{ \"title\": \"...\" }` |\n| PATCH | `/tasks/:id` | Частичное обновление: `title`, `done` |\n| DELETE | `/tasks/:id` | Удалить |\n\n### Ответы\n- **200** — GET/PATCH успех (тело — объект или массив).\n- **201** — POST, заголовок `Location: /tasks/:id`.\n- **204** — DELETE без тела.\n- **400** — невалидный JSON/поля.\n- **404** — нет задачи с таким `id`.\n\nОшибка: `{ \"error\": \"код\", \"message\": \"текст\" }`.\n\n### Хранение (без ORM)\n- **Файл** (`tasks.json`) или **SQLite** через `better-sqlite3` / `node:sqlite` — только SQL/ручной доступ к файлу.\n- Слой `TaskRepository`: `findAll(filters)`, `findById`, `create`, `update`, `delete`.\n- `id` — UUID v4 или автоинкремент в SQLite.\n\n### Стек (типично для Node)\n- HTTP: встроенный `node:http` или **Express/Fastify** (не «внешний сервис», локальная библиотека).\n- Валидация вручную или лёгкая схема без ORM.\n\n### Пример POST\n```http\nPOST /tasks\nContent-Type: application/json\n\n{ \"title\": \"Купить молоко\" }\n```\n```json\n{ \"id\": \"…\", \"title\": \"Купить молоко\", \"done\": false, \"createdAt\": \"…\", \"updatedAt\": \"…\" }\n```\n\nЕсли нужно — могу вписать это в ваш репозиторий (`src/index.js`, `store.js`) после просмотра кода.",
+          "requestEstimated": 109,
+          "requestBilled": 11501,
+          "responseEstimated": 412,
+          "responseBilled": 959,
+          "occupancy": 525,
+          "percent": 0,
+          "promptMessageCount": 4,
+          "messageCount": 4,
+          "usageTotal": 17734,
+          "usageInput": 14974,
+          "usageOutput": 1096,
+          "memory": {
+            "messages": 4,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 3,
+          "label": "setup",
+          "query": "Решили: аутентификация только JWT, ресурс задач — /tasks.",
+          "elapsedMs": 2811,
+          "replyChars": 764,
+          "replyPreview": "**Зафиксировано** - Задачи: **`/tasks`** (как раньше: GET/POST, GET/PATCH/DELETE `/tasks/:id`). - Вход: **`POST /auth/login`** (или `/login`) — тело с учётными данными, в ответ **`accessToken`** (JWT). Регистрация/refresh — **нет в контексте**, если не добавите отдельно. - Все запросы к **`/tasks*`** — заголовок **`Authorization: Bearer <token>`**; без/с битым токеном — **401**. - JWT: проверка по…",
+          "reply": "**Зафиксировано**\n\n- Задачи: **`/tasks`** (как раньше: GET/POST, GET/PATCH/DELETE `/tasks/:id`).\n- Вход: **`POST /auth/login`** (или `/login`) — тело с учётными данными, в ответ **`accessToken`** (JWT). Регистрация/refresh — **нет в контексте**, если не добавите отдельно.\n- Все запросы к **`/tasks*`** — заголовок **`Authorization: Bearer <token>`**; без/с битым токеном — **401**.\n- JWT: проверка подписи и `exp` на каждый запрос; в payload минимум **`sub`** (id пользователя). Задачи привязать к **`sub`** — у каждого только свои записи (**нет в контексте**, если нужна общая доска).\n\n**Пример**\n\n```http\nGET /tasks\nAuthorization: Bearer eyJ...\n```\n\nСекрет/ключ подписи — из env (например `JWT_SECRET`), без внешних auth-сервисов. ORM по-прежнему не используем.",
+          "requestEstimated": 540,
+          "requestBilled": 4762,
+          "responseEstimated": 191,
+          "responseBilled": 389,
+          "occupancy": 736,
+          "percent": 0,
+          "promptMessageCount": 6,
+          "messageCount": 6,
+          "usageTotal": 23301,
+          "usageInput": 19736,
+          "usageOutput": 1485,
+          "memory": {
+            "messages": 6,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 4,
+          "label": "setup",
+          "query": "Статусы задачи: todo, doing, done. Зафиксируй это как договорённость.",
+          "elapsedMs": 2374,
+          "replyChars": 613,
+          "replyPreview": "**Договорённость: статус задачи** - Поле **`status`**, строка, ровно одно из: **`todo`** | **`doing`** | **`done`**. - При **POST `/tasks`**: если `status` не передан — **`todo`** (если иное не зафиксируете отдельно). - **PATCH `/tasks/:id`**: можно менять `status` только на одно из трёх значений; иначе **400**. - Поле **`done` (boolean)** из ранней схемы **не используем** — вместо него **`status`…",
+          "reply": "**Договорённость: статус задачи**\n\n- Поле **`status`**, строка, ровно одно из: **`todo`** | **`doing`** | **`done`**.\n- При **POST `/tasks`**: если `status` не передан — **`todo`** (если иное не зафиксируете отдельно).\n- **PATCH `/tasks/:id`**: можно менять `status` только на одно из трёх значений; иначе **400**.\n- Поле **`done` (boolean)** из ранней схемы **не используем** — вместо него **`status`**.\n- Фильтр списка: **`GET /tasks?status=todo|doing|done`** (как раньше обсуждали query-параметры).\n\nОстальное без изменений: **`/tasks`**, аутентификация **только JWT**, хранение **без ORM и внешних сервисов**.",
+          "requestEstimated": 753,
+          "requestBilled": 5214,
+          "responseEstimated": 154,
+          "responseBilled": 287,
+          "occupancy": 911,
+          "percent": 0,
+          "promptMessageCount": 8,
+          "messageCount": 8,
+          "usageTotal": 32706,
+          "usageInput": 24950,
+          "usageOutput": 1772,
+          "memory": {
+            "messages": 8,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "",
+                "entries": {}
+              },
+              "long": {
+                "profile": {},
+                "decisions": {},
+                "knowledge": {}
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 0,
+              "longProfile": 0,
+              "longDecisions": 0,
+              "longKnowledge": 0,
+              "task": ""
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": "remember",
+          "label": "remember+task",
+          "memory": {
+            "messages": 8,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "Спроектировать REST API",
+                "entries": {
+                  "цель": "REST API списка задач",
+                  "ограничения": "без внешних сервисов и без ORM"
+                }
+              },
+              "long": {
+                "profile": {
+                  "имя": "Алексей",
+                  "стиль": "кратко, по-русски, без воды"
+                },
+                "decisions": {
+                  "auth": "JWT",
+                  "ресурс": "/tasks"
+                },
+                "knowledge": {
+                  "статусы": "todo | doing | done"
+                }
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 2,
+              "long": 5,
+              "longProfile": 2,
+              "longDecisions": 2,
+              "longKnowledge": 1,
+              "task": "Спроектировать REST API"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "label": "endpoints",
+          "query": "Набросай эндпоинты списка задач, опираясь на то, что уже сказано.",
+          "elapsedMs": 4433,
+          "replyChars": 959,
+          "replyPreview": "**Список задач — эндпоинты** (`Authorization: Bearer <JWT>` на всех) | Метод | Путь | Назначение | |--------|------|------------| | **GET** | `/tasks` | Список своих задач. Query: `status=todo\\|doing\\|done`, `limit`, `offset` | | **GET** | `/tasks/:id` | Одна задача по `id` | | **POST** | `/tasks` | Создать. Body: `{ \"title\": \"...\" }`, опционально `\"status\"`; без `status` → **`todo`** | | **PATCH*…",
+          "reply": "**Список задач — эндпоинты** (`Authorization: Bearer <JWT>` на всех)\n\n| Метод | Путь | Назначение |\n|--------|------|------------|\n| **GET** | `/tasks` | Список своих задач. Query: `status=todo\\|doing\\|done`, `limit`, `offset` |\n| **GET** | `/tasks/:id` | Одна задача по `id` |\n| **POST** | `/tasks` | Создать. Body: `{ \"title\": \"...\" }`, опционально `\"status\"`; без `status` → **`todo`** |\n| **PATCH** | `/tasks/:id` | Частично: `title`, `status` (только `todo` \\| `doing` \\| `done`) |\n| **DELETE** | `/tasks/:id` | Удалить |\n\n**Модель в ответах:** `id`, `title`, `status`, `createdAt`, `updatedAt` (ISO 8601).\n\n**Коды:** 200 — GET/PATCH; 201 + `Location: /tasks/:id` — POST; 204 — DELETE; 400 — невалидное тело/`status`; 401 — нет/битый JWT; 404 — нет задачи. Ошибка: `{ \"error\", \"message\" }`.\n\nПривязка задач к пользователю из JWT (`sub`) — **нет в контексте** как обязательное правило, но логично при «только JWT»; если нужно явно — зафиксируйте отдельно.",
+          "requestEstimated": 1035,
+          "requestBilled": 4973,
+          "responseEstimated": 240,
+          "responseBilled": 581,
+          "occupancy": 1280,
+          "percent": 1,
+          "promptMessageCount": 10,
+          "messageCount": 10,
+          "usageTotal": 38676,
+          "usageInput": 29923,
+          "usageOutput": 2353,
+          "memory": {
+            "messages": 10,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "Спроектировать REST API",
+                "entries": {
+                  "цель": "REST API списка задач",
+                  "ограничения": "без внешних сервисов и без ORM"
+                }
+              },
+              "long": {
+                "profile": {
+                  "имя": "Алексей",
+                  "стиль": "кратко, по-русски, без воды"
+                },
+                "decisions": {
+                  "auth": "JWT",
+                  "ресурс": "/tasks"
+                },
+                "knowledge": {
+                  "статусы": "todo | doing | done"
+                }
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 2,
+              "long": 5,
+              "longProfile": 2,
+              "longDecisions": 2,
+              "longKnowledge": 1,
+              "task": "Спроектировать REST API"
+            }
+          },
+          "checks": null
+        },
+        {
+          "step": 6,
+          "label": "probe-A",
+          "query": "Как меня зовут и в каком стиле отвечать? Какой auth и путь ресурса? Цель задачи и ограничения? Какие статусы? Нет в контексте — так и скажи.",
+          "elapsedMs": 4284,
+          "replyChars": 316,
+          "replyPreview": "**Имя и стиль:** Алексей; отвечать **кратко, по-русски, без воды**; только факты из контекста, иначе «нет в контексте». **Auth и ресурс:** **JWT**; задачи — **`/tasks`**. **Задача:** REST API **списка задач**. **Ограничения:** без внешних сервисов, **без ORM**. **Статусы:** **`todo`** | **`doing`** | **`done`**.",
+          "reply": "**Имя и стиль:** Алексей; отвечать **кратко, по-русски, без воды**; только факты из контекста, иначе «нет в контексте».\n\n**Auth и ресурс:** **JWT**; задачи — **`/tasks`**.\n\n**Задача:** REST API **списка задач**. **Ограничения:** без внешних сервисов, **без ORM**.\n\n**Статусы:** **`todo`** | **`doing`** | **`done`**.",
+          "requestEstimated": 1315,
+          "requestBilled": 5651,
+          "responseEstimated": 79,
+          "responseBilled": 254,
+          "occupancy": 1399,
+          "percent": 1,
+          "promptMessageCount": 12,
+          "messageCount": 12,
+          "usageTotal": 49765,
+          "usageInput": 35574,
+          "usageOutput": 2607,
+          "memory": {
+            "messages": 12,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "Спроектировать REST API",
+                "entries": {
+                  "цель": "REST API списка задач",
+                  "ограничения": "без внешних сервисов и без ORM"
+                }
+              },
+              "long": {
+                "profile": {
+                  "имя": "Алексей",
+                  "стиль": "кратко, по-русски, без воды"
+                },
+                "decisions": {
+                  "auth": "JWT",
+                  "ресурс": "/tasks"
+                },
+                "knowledge": {
+                  "статусы": "todo | doing | done"
+                }
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 2,
+              "long": 5,
+              "longProfile": 2,
+              "longDecisions": 2,
+              "longKnowledge": 1,
+              "task": "Спроектировать REST API"
+            }
+          },
+          "checks": [
+            {
+              "id": "name",
+              "label": "Алексей",
+              "hit": true
+            },
+            {
+              "id": "style",
+              "label": "кратко / без воды",
+              "hit": true
+            },
+            {
+              "id": "jwt",
+              "label": "JWT",
+              "hit": true
+            },
+            {
+              "id": "tasks",
+              "label": "/tasks",
+              "hit": true
+            },
+            {
+              "id": "goal",
+              "label": "цель REST API / список задач",
+              "hit": true
+            },
+            {
+              "id": "orm",
+              "label": "без ORM / внешних сервисов",
+              "hit": true
+            },
+            {
+              "id": "todo",
+              "label": "статусы todo/doing/done",
+              "hit": true
+            },
+            {
+              "id": "missing",
+              "label": "нет в контексте",
+              "hit": true
+            }
+          ]
+        },
+        {
+          "step": "forget-short",
+          "label": "forget short",
+          "memory": {
+            "messages": 0,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "Спроектировать REST API",
+                "entries": {
+                  "цель": "REST API списка задач",
+                  "ограничения": "без внешних сервисов и без ORM"
+                }
+              },
+              "long": {
+                "profile": {
+                  "имя": "Алексей",
+                  "стиль": "кратко, по-русски, без воды"
+                },
+                "decisions": {
+                  "auth": "JWT",
+                  "ресурс": "/tasks"
+                },
+                "knowledge": {
+                  "статусы": "todo | doing | done"
+                }
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 2,
+              "long": 5,
+              "longProfile": 2,
+              "longDecisions": 2,
+              "longKnowledge": 1,
+              "task": "Спроектировать REST API"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "label": "probe-B",
+          "query": "Как меня зовут и в каком стиле отвечать? Какой auth и путь ресурса? Цель задачи и ограничения? Какие статусы? Нет в контексте — так и скажи.",
+          "elapsedMs": 3418,
+          "replyChars": 364,
+          "replyPreview": "- **Имя и стиль:** Алексей; отвечать **кратко, по-русски, без воды**. - **Auth и ресурс:** **JWT**; путь ресурса **`/tasks`**. - **Цель задачи:** REST API **списка задач**. - **Ограничения:** **без внешних сервисов** и **без ORM**. - **Статусы:** **`todo` | `doing` | `done`**. Всё перечисленное есть в контексте (профиль, решения, знания, рабочая память задачи).",
+          "reply": "- **Имя и стиль:** Алексей; отвечать **кратко, по-русски, без воды**.\n- **Auth и ресурс:** **JWT**; путь ресурса **`/tasks`**.\n- **Цель задачи:** REST API **списка задач**.\n- **Ограничения:** **без внешних сервисов** и **без ORM**.\n- **Статусы:** **`todo` | `doing` | `done`**.\n\nВсё перечисленное есть в контексте (профиль, решения, знания, рабочая память задачи).",
+          "requestEstimated": 176,
+          "requestBilled": 3678,
+          "responseEstimated": 91,
+          "responseBilled": 331,
+          "occupancy": 272,
+          "percent": 0,
+          "promptMessageCount": 2,
+          "messageCount": 2,
+          "usageTotal": 54190,
+          "usageInput": 39252,
+          "usageOutput": 2938,
+          "memory": {
+            "messages": 2,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "Спроектировать REST API",
+                "entries": {
+                  "цель": "REST API списка задач",
+                  "ограничения": "без внешних сервисов и без ORM"
+                }
+              },
+              "long": {
+                "profile": {
+                  "имя": "Алексей",
+                  "стиль": "кратко, по-русски, без воды"
+                },
+                "decisions": {
+                  "auth": "JWT",
+                  "ресурс": "/tasks"
+                },
+                "knowledge": {
+                  "статусы": "todo | doing | done"
+                }
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 2,
+              "long": 5,
+              "longProfile": 2,
+              "longDecisions": 2,
+              "longKnowledge": 1,
+              "task": "Спроектировать REST API"
+            }
+          },
+          "checks": [
+            {
+              "id": "name",
+              "label": "Алексей",
+              "hit": true
+            },
+            {
+              "id": "style",
+              "label": "кратко / без воды",
+              "hit": true
+            },
+            {
+              "id": "jwt",
+              "label": "JWT",
+              "hit": true
+            },
+            {
+              "id": "tasks",
+              "label": "/tasks",
+              "hit": true
+            },
+            {
+              "id": "goal",
+              "label": "цель REST API / список задач",
+              "hit": true
+            },
+            {
+              "id": "orm",
+              "label": "без ORM / внешних сервисов",
+              "hit": true
+            },
+            {
+              "id": "todo",
+              "label": "статусы todo/doing/done",
+              "hit": true
+            },
+            {
+              "id": "missing",
+              "label": "нет в контексте",
+              "hit": false
+            }
+          ]
+        },
+        {
+          "step": "task-start",
+          "label": "task start Другая задача",
+          "memory": {
+            "messages": 2,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "Другая задача",
+                "entries": {}
+              },
+              "long": {
+                "profile": {
+                  "имя": "Алексей",
+                  "стиль": "кратко, по-русски, без воды"
+                },
+                "decisions": {
+                  "auth": "JWT",
+                  "ресурс": "/tasks"
+                },
+                "knowledge": {
+                  "статусы": "todo | doing | done"
+                }
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 5,
+              "longProfile": 2,
+              "longDecisions": 2,
+              "longKnowledge": 1,
+              "task": "Другая задача"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "label": "probe-C",
+          "query": "Напомни цель текущей задачи и ограничение про ORM. Напомни auth и как меня зовут. Нет в контексте — так и скажи.",
+          "elapsedMs": 2794,
+          "replyChars": 109,
+          "replyPreview": "**Цель задачи:** REST API списка задач. **Ограничение про ORM:** без ORM. **Auth:** JWT. **Имя:** Алексей.",
+          "reply": "**Цель задачи:** REST API списка задач.\n\n**Ограничение про ORM:** без ORM.\n\n**Auth:** JWT.\n\n**Имя:** Алексей.",
+          "requestEstimated": 255,
+          "requestBilled": 3841,
+          "responseEstimated": 28,
+          "responseBilled": 233,
+          "occupancy": 287,
+          "percent": 0,
+          "promptMessageCount": 4,
+          "messageCount": 4,
+          "usageTotal": 58680,
+          "usageInput": 43093,
+          "usageOutput": 3171,
+          "memory": {
+            "messages": 4,
+            "memory": {
+              "short": {
+                "entries": {}
+              },
+              "working": {
+                "task": "Другая задача",
+                "entries": {}
+              },
+              "long": {
+                "profile": {
+                  "имя": "Алексей",
+                  "стиль": "кратко, по-русски, без воды"
+                },
+                "decisions": {
+                  "auth": "JWT",
+                  "ресурс": "/tasks"
+                },
+                "knowledge": {
+                  "статусы": "todo | doing | done"
+                }
+              }
+            },
+            "counts": {
+              "short": 0,
+              "working": 0,
+              "long": 5,
+              "longProfile": 2,
+              "longDecisions": 2,
+              "longKnowledge": 1,
+              "task": "Другая задача"
+            }
+          },
+          "checks": [
+            {
+              "id": "name",
+              "label": "Алексей",
+              "hit": true
+            },
+            {
+              "id": "style",
+              "label": "кратко / без воды",
+              "hit": false
+            },
+            {
+              "id": "jwt",
+              "label": "JWT",
+              "hit": true
+            },
+            {
+              "id": "tasks",
+              "label": "/tasks",
+              "hit": false
+            },
+            {
+              "id": "goal",
+              "label": "цель REST API / список задач",
+              "hit": true
+            },
+            {
+              "id": "orm",
+              "label": "без ORM / внешних сервисов",
+              "hit": true
+            },
+            {
+              "id": "todo",
+              "label": "статусы todo/doing/done",
+              "hit": false
+            },
+            {
+              "id": "missing",
+              "label": "нет в контексте",
+              "hit": false
+            }
+          ]
+        }
+      ],
+      "probeHits": {
+        "6": [
+          "name",
+          "style",
+          "jwt",
+          "tasks",
+          "goal",
+          "orm",
+          "todo",
+          "missing"
+        ],
+        "7": [
+          "name",
+          "style",
+          "jwt",
+          "tasks",
+          "goal",
+          "orm",
+          "todo"
+        ],
+        "8": [
+          "name",
+          "jwt",
+          "goal",
+          "orm"
+        ]
+      },
+      "memoryAfterSetup": {
+        "messages": 8,
+        "memory": {
+          "short": {
+            "entries": {}
+          },
+          "working": {
+            "task": "Спроектировать REST API",
+            "entries": {
+              "цель": "REST API списка задач",
+              "ограничения": "без внешних сервисов и без ORM"
+            }
+          },
+          "long": {
+            "profile": {
+              "имя": "Алексей",
+              "стиль": "кратко, по-русски, без воды"
+            },
+            "decisions": {
+              "auth": "JWT",
+              "ресурс": "/tasks"
+            },
+            "knowledge": {
+              "статусы": "todo | doing | done"
+            }
+          }
+        },
+        "counts": {
+          "short": 0,
+          "working": 2,
+          "long": 5,
+          "longProfile": 2,
+          "longDecisions": 2,
+          "longKnowledge": 1,
+          "task": "Спроектировать REST API"
+        }
+      },
+      "memoryAfterForget": {
+        "messages": 0,
+        "memory": {
+          "short": {
+            "entries": {}
+          },
+          "working": {
+            "task": "Спроектировать REST API",
+            "entries": {
+              "цель": "REST API списка задач",
+              "ограничения": "без внешних сервисов и без ORM"
+            }
+          },
+          "long": {
+            "profile": {
+              "имя": "Алексей",
+              "стиль": "кратко, по-русски, без воды"
+            },
+            "decisions": {
+              "auth": "JWT",
+              "ресурс": "/tasks"
+            },
+            "knowledge": {
+              "статусы": "todo | doing | done"
+            }
+          }
+        },
+        "counts": {
+          "short": 0,
+          "working": 2,
+          "long": 5,
+          "longProfile": 2,
+          "longDecisions": 2,
+          "longKnowledge": 1,
+          "task": "Спроектировать REST API"
+        }
+      },
+      "memoryAfterNewTask": {
+        "messages": 2,
+        "memory": {
+          "short": {
+            "entries": {}
+          },
+          "working": {
+            "task": "Другая задача",
+            "entries": {}
+          },
+          "long": {
+            "profile": {
+              "имя": "Алексей",
+              "стиль": "кратко, по-русски, без воды"
+            },
+            "decisions": {
+              "auth": "JWT",
+              "ресурс": "/tasks"
+            },
+            "knowledge": {
+              "статусы": "todo | doing | done"
+            }
+          }
+        },
+        "counts": {
+          "short": 0,
+          "working": 0,
+          "long": 5,
+          "longProfile": 2,
+          "longDecisions": 2,
+          "longKnowledge": 1,
+          "task": "Другая задача"
+        }
+      },
+      "finalUsage": {
+        "inputTokens": 43093,
+        "outputTokens": 3171,
+        "cacheReadTokens": 12416,
+        "cacheWriteTokens": 0,
+        "totalTokens": 58680,
+        "reasoningTokens": 0
+      },
+      "finalOccupancy": 287,
+      "messageCount": 4,
+      "memory": {
+        "messages": 4,
+        "memory": {
+          "short": {
+            "entries": {}
+          },
+          "working": {
+            "task": "Другая задача",
+            "entries": {}
+          },
+          "long": {
+            "profile": {
+              "имя": "Алексей",
+              "стиль": "кратко, по-русски, без воды"
+            },
+            "decisions": {
+              "auth": "JWT",
+              "ресурс": "/tasks"
+            },
+            "knowledge": {
+              "статусы": "todo | doing | done"
+            }
+          }
+        },
+        "counts": {
+          "short": 0,
+          "working": 0,
+          "long": 5,
+          "longProfile": 2,
+          "longDecisions": 2,
+          "longKnowledge": 1,
+          "task": "Другая задача"
+        }
+      }
+    }
+  ],
+  "atEnd": "2026-09-15T16:21:46.839Z"
+}

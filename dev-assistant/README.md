@@ -21,11 +21,11 @@ npm start
 
 ## Ручной прогон
 
-Пример — каталог `Day 31` в [AI-Advent-Challenge](https://github.com/Alexandr827/AI-Advent-Challenge) (клон репозитория и путь к папке).
+Пример — каталог `Day 32` в [AI-Advent-Challenge](https://github.com/Alexandr827/AI-Advent-Challenge) (клон репозитория и путь к папке).
 
 ```text
 npm start
-connect /путь/к/AI-Advent-Challenge/Day 31
+connect /путь/к/AI-Advent-Challenge/Day 32
 /help
 /help какая сейчас ветка
 /help перечисли файлы проекта
@@ -42,3 +42,51 @@ connect /путь/к/AI-Advent-Challenge/Day 31
 Ответ на вопрос состоит из трёх блоков: «Ответ», «Источники» (`файл | секция`) и «Контекст MCP». Ветка и список файлов приходят с каждым вопросом. Diff добавляется, когда в вопросе есть изменения, diff или ветка. Вопрос о структуре всегда получает обзорный фрагмент README.
 
 Команда `help` без слэша печатает список команд этого CLI и к проекту не обращается.
+
+## AI-ревью Pull Request
+
+Цепочка на GitHub: **PR created → diff (`pull_request.diff_url`) → RAG (документация) → LLM-ревью → комментарий в PR**.
+
+Ревью разбирает **подключённый проект**, а не каталог dev-assistant. В ответе три раздела: потенциальные баги, архитектурные проблемы, рекомендации.
+
+### Локально (до создания PR)
+
+Вторую копию репозитория скачивать не нужно: в одном клоне уже есть база и текущие правки.
+
+```bash
+npm start
+connect /путь/к/проекту
+npm run review
+# явный корень и диапазон (как будущий PR):
+node scripts/ai-review.js --root /путь/к/проекту --base origin/main --head HEAD
+# готовый patch-файл:
+node scripts/ai-review.js --root /путь/к/проекту --diff ./change.patch
+```
+
+По умолчанию diff — `main...HEAD` (или `master` / `origin/main`, если локальной `main` нет). Если новых коммитов нет, берутся незакоммиченные изменения. Явный диапазон: `--base` / `--head` или `PR_BASE_SHA` / `PR_HEAD_SHA`.
+
+LM Studio (`LMSTUDIO_BASE_URL`, `LMSTUDIO_MODEL`) необязательна: без модели ответ собирается из diff и найденных фрагментов.
+
+### Пайплайн на Pull Request
+
+Скрипт `scripts/ai-review.js` живёт в **dev-assistant**. В проекте (например [AI-Advent-Challenge](https://github.com/Alexandr827/AI-Advent-Challenge)) — workflow `.github/workflows/ai-review.yml`: checkout проекта и dev-assistant, затем `node scripts/ai-review.js --diff` с URL diff из события PR.
+
+**Установка в подключённый проект:**
+
+```bash
+cd /путь/к/dev-assistant
+connect /путь/к/AI-Advent-Challenge
+npm run pr:pipeline -- install
+```
+
+```bash
+cd /путь/к/AI-Advent-Challenge
+git add .github/workflows/ai-review.yml
+git commit -m "ci: AI-ревью PR"
+git push
+gh pr create ...
+```
+
+При `opened` / `synchronize` job качает diff по API GitHub, индексирует документацию проекта и публикует комментарий в PR.
+
+Переменные установки: `DEV_ASSISTANT_GITHUB_REPO` (по умолчанию `Alexandr827/AI-Advent-Challenge` — dev-assistant в корне монорепо), `DEV_ASSISTANT_GITHUB_REF` (`main`). Секреты `LMSTUDIO_BASE_URL`, `LLM_SERVICE_TOKEN`, `LMSTUDIO_MODEL` в репозитории проекта опциональны.

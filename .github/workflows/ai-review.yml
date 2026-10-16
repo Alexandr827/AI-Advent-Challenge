@@ -1,0 +1,30 @@
+# Монорепо AI-Advent-Challenge: dev-assistant в том же репозитории
+name: AI review
+on:
+  pull_request:
+    types: [opened, synchronize]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+        working-directory: dev-assistant
+      - name: AI review
+        working-directory: dev-assistant
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_TARGET_REPO: ${{ github.repository }}
+          LMSTUDIO_BASE_URL: ${{ secrets.LMSTUDIO_BASE_URL }}
+          LLM_SERVICE_TOKEN: ${{ secrets.LLM_SERVICE_TOKEN }}
+          LMSTUDIO_MODEL: ${{ secrets.LMSTUDIO_MODEL }}
+        run: node scripts/ai-review.js --root "${{ github.workspace }}" --diff "${{ github.event.pull_request.diff_url }}"

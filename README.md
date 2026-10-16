@@ -2,11 +2,17 @@
 
 Репозиторий с проектами челленджа AI Advent.
 
+## Day 32 — Автоматизация ревью кода
+
+- **[dev-assistant](dev-assistant/)** — AI-ревью PR: `npm run review`, `scripts/ai-review.js` (diff → RAG по документации → LLM → отчёт), установка CI через `npm run pr:pipeline -- install`. Плюс ассистент Day 31: `connect`, `/help`, project MCP.
+- **[Day 32](Day%2032/)** — снимок `nodeJsProject` (дни 14–31 + описание Day 32 в README).
+
+В корне репозитория — [`.github/workflows/ai-review.yml`](.github/workflows/ai-review.yml): при `pull_request` (opened/synchronize) публикуется комментарий с ревью. Секреты `LMSTUDIO_*` / `LLM_SERVICE_TOKEN` опциональны; без них ответ собирается из diff и RAG.
+
+Секреты в репозиторий не кладите: `.env`, `data/connection.json` — только локально. Шаблон переменных — `Day 32/.env.example`.
+
 ## Day 31 — Ассистент разработчика
 
-- **[dev-assistant](dev-assistant/)** — отдельный CLI: подключение к проекту (`connect`, `change connect`, `disconnect`, `whereami`), RAG по README и `docs/`, MCP (`git_branch`, `list_files`, `git_diff`), команда `/help`.
-- **[Day 31](Day%2031/)** — снимок `nodeJsProject` (дни 14–30): агенты, RAG по 38-ФЗ, MCP, локальная LLM. Код ассистента вынесен в `dev-assistant`.
-
-Секреты в репозиторий не кладите: используйте `.env.example`, локальный `.env` и `data/connection.json` остаются только на машине.
+- **[Day 31](Day%2031/)** — снимок до выноса AI-ревью; актуальный CLI — в `dev-assistant/`.
 
 Предыдущие дни — каталоги `Day 1` … `Day 30`.

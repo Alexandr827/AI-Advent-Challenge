@@ -1,0 +1,20 @@
+{
+  "model": "composer-2.5",
+  "runtime": "local",
+  "at": "2026-09-25T14:10:20.683Z",
+  "query": "Вызови MCP-инструмент git_status сервера demo-mcp. Параметр repo не передавай: сервер сам возьмёт каталог проекта. Другие инструменты не используй. Когда получишь результат, первой строкой ответа напиши дословно первую строку вывода git_status. Второй строкой одной фразой скажи, есть ли незакоммиченные изменения.",
+  "runId": "run-57984895-f17c-46c1-adb4-da1512f60b11",
+  "calls": [
+    {
+      "callId": "tool_2f4dd7af-1281-49cd-a170-9cc290a70dd",
+      "name": "mcp",
+      "tool": "git_status",
+      "arguments": {},
+      "status": "completed",
+      "resultText": "## No commits yet on main\nAM .env.example\nAM .gitignore\nA  launch.json\nAM package.json\nAM src/index.js\n?? .DS_Store\n?? README.md\n?? package-lock.json\n?? scripts/\n?? src/agent.js\n?? src/cli.js\n?? src/context.js\n?? src/env.js\n?? src/invariant.js\n?? src/invariant/\n?? src/mcp-client.js\n?? src/mcp-server.js\n?? src/mcp-trace.js\n?? src/memory.js\n?? src/pool.js\n?? src/profile.js\n?? src/profile/\n?? src/store.js\n?? src/strategy.js\n?? src/task.js\n?? src/tokens.js\n?? test/",
+      "isError": false
+    }
+  ],
+  "reply": "## No commits yet on main\n\nДа, в репозитории есть незакоммиченные изменения: проиндексированные, изменённые и неотслеживаемые файлы.",
+  "used": true
+}

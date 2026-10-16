@@ -1,0 +1,4 @@
+node_modules/
+.env
+data/doc-index/law.sqlite
+data/doc-index/corpus.sqlite

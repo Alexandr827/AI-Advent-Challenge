@@ -1,0 +1,13 @@
+---
+description: "Constraints rules for user alex"
+alwaysApply: true
+kind: constraints
+user: alex
+---
+
+# Constraints
+
+- stack: javascript + nodeJS
+- architecture: MVVM
+- dependencies: минимум зависимостей
+- apis: только бесплатные api

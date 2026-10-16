@@ -9,6 +9,8 @@
   "scripts": {
     "start": "node src/index.js",
     "index": "node scripts/index.js",
+    "review": "node scripts/ai-review.js",
+    "pr:pipeline": "node scripts/pr-pipeline.js",
     "test": "node --test test/**/*.test.js"
   },
   "dependencies": {
