@@ -2,6 +2,12 @@
 
 Репозиторий с проектами челленджа AI Advent.
 
+## Day 33 — Ассистент поддержки пользователей
+
+- **[Day 33](Day%2033/)** — Python-проект `user-assistant`: RAG по FAQ, контекст тикета/пользователя из CRM, ответ через Cursor SDK (`support_agent.py`). Опциональный MCP-сервер CRM — `mcp_crm_server.py`.
+
+Секреты не публикуйте: локальный `.env` с `CURSOR_API_KEY`, шаблон — `Day 33/.env.example`.
+
 ## Day 32 — Автоматизация ревью кода
 
 - **[dev-assistant](dev-assistant/)** — AI-ревью PR: `npm run review`, `scripts/ai-review.js` (diff → RAG по документации → LLM → отчёт), установка CI через `npm run pr:pipeline -- install`. Плюс ассистент Day 31: `connect`, `/help`, project MCP.

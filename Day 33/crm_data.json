@@ -1,0 +1,32 @@
+{
+  "tickets": {
+    "T-1042": {
+      "user_id": "U-88",
+      "subject": "Проблема с входом",
+      "description": "Пользователь жалуется, что не может войти через корпоративный SSO.",
+      "status": "open",
+      "priority": "high"
+    },
+    "T-1043": {
+      "user_id": "U-12",
+      "subject": "Вопрос по биллингу",
+      "description": "Не приходит счет на почту.",
+      "status": "closed",
+      "priority": "low"
+    }
+  },
+  "users": {
+    "U-88": {
+      "name": "Иван Петров",
+      "tariff": "Enterprise",
+      "company": "ООО 'Техно'",
+      "email": "i.petrov@techno.com"
+    },
+    "U-12": {
+      "name": "Мария Сидорова",
+      "tariff": "Free",
+      "company": null,
+      "email": "maria@gmail.com"
+    }
+  }
+}

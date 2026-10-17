@@ -1,0 +1,4 @@
+mcp
+cursor-sdk
+numpy
+scikit-learn
