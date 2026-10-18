@@ -2,6 +2,13 @@
 
 Репозиторий с проектами челленджа AI Advent.
 
+## Day 34 — Ассистент для работы с файлами проекта
+
+- **[Day 34](Day%2034/)** — CLI `file-assistant` на TypeScript и Cursor SDK (`@cursor/sdk`): локальный агент читает, ищет и правит файлы в копии проекта (`workspace/`), команды `import`, `save`, `docs`, `readme`, `changelog`, сценарии на демо-каталоге `fixtures/`.
+- Подкаталог **[nodeJsProject](Day%2034/nodeJsProject/)** — демо-проект из предыдущих дней челленджа; его можно подставить ассистенту по имени (`NodeJSproject`) или путём `--project`.
+
+Секреты не публикуйте: локальный `.env` с `CURSOR_API_KEY`, шаблон — `Day 34/.env.example`.
+
 ## Day 33 — Ассистент поддержки пользователей
 
 - **[Day 33](Day%2033/)** — Python-проект `user-assistant`: RAG по FAQ, контекст тикета/пользователя из CRM, ответ через Cursor SDK (`support_agent.py`). Опциональный MCP-сервер CRM — `mcp_crm_server.py`.

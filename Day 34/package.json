@@ -1,0 +1,28 @@
+{
+  "name": "file-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "import": "tsx src/cli.ts import",
+    "docs": "tsx src/cli.ts docs",
+    "readme": "tsx src/cli.ts readme",
+    "adr": "tsx src/cli.ts adr",
+    "changelog": "tsx src/cli.ts changelog",
+    "assistant": "tsx src/cli.ts run",
+    "clean": "tsx src/cli.ts clean",
+    "save": "tsx src/cli.ts save",
+    "scenario:changelog": "tsx src/cli.ts changelog --fixtures",
+    "scenario:docs": "tsx src/cli.ts docs --fixtures",
+    "reset": "tsx src/cli.ts reset",
+    "test": "tsx --test test/*.ts"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.38"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
