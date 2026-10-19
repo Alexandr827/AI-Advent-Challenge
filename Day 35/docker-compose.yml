@@ -1,0 +1,16 @@
+services:
+  spec:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATA_DIR: /data
+      MAX_TOOL_ROUNDS: ${MAX_TOOL_ROUNDS:-8}
+      LLM_STRONG_BASE_URL: ${LLM_STRONG_BASE_URL:-https://api.cursor.com/v1}
+      LLM_STRONG_API_KEY: ${LLM_STRONG_API_KEY:-}
+      LLM_STRONG_MODEL: ${LLM_STRONG_MODEL:-grok-4.7}
+      LLM_CHEAP_BASE_URL: ${LLM_CHEAP_BASE_URL:-https://api.cursor.com/v1}
+      LLM_CHEAP_API_KEY: ${LLM_CHEAP_API_KEY:-}
+      LLM_CHEAP_MODEL: ${LLM_CHEAP_MODEL:-composer-2.5}
+    volumes:
+      - ./data:/data

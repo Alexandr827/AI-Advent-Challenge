@@ -1,31 +1,9 @@
 # AI-Advent-Challenge
 
-Репозиторий с проектами челленджа AI Advent.
+Репозиторий с проектами [AI Advent Challenge](https://github.com/Alexandr827/AI-Advent-Challenge).
 
-## Day 34 — Ассистент для работы с файлами проекта
+| День | Тема |
+|------|------|
+| [Day 35](Day%2035/README.md) | **Реальная задача** — агент черновиков технического задания (FastAPI + UI) |
 
-- **[Day 34](Day%2034/)** — CLI `file-assistant` на TypeScript и Cursor SDK (`@cursor/sdk`): локальный агент читает, ищет и правит файлы в копии проекта (`workspace/`), команды `import`, `save`, `docs`, `readme`, `changelog`, сценарии на демо-каталоге `fixtures/`.
-- Подкаталог **[nodeJsProject](Day%2034/nodeJsProject/)** — демо-проект из предыдущих дней челленджа; его можно подставить ассистенту по имени (`NodeJSproject`) или путём `--project`.
-
-Секреты не публикуйте: локальный `.env` с `CURSOR_API_KEY`, шаблон — `Day 34/.env.example`.
-
-## Day 33 — Ассистент поддержки пользователей
-
-- **[Day 33](Day%2033/)** — Python-проект `user-assistant`: RAG по FAQ, контекст тикета/пользователя из CRM, ответ через Cursor SDK (`support_agent.py`). Опциональный MCP-сервер CRM — `mcp_crm_server.py`.
-
-Секреты не публикуйте: локальный `.env` с `CURSOR_API_KEY`, шаблон — `Day 33/.env.example`.
-
-## Day 32 — Автоматизация ревью кода
-
-- **[dev-assistant](dev-assistant/)** — AI-ревью PR: `npm run review`, `scripts/ai-review.js` (diff → RAG по документации → LLM → отчёт), установка CI через `npm run pr:pipeline -- install`. Плюс ассистент Day 31: `connect`, `/help`, project MCP.
-- **[Day 32](Day%2032/)** — снимок `nodeJsProject` (дни 14–31 + описание Day 32 в README).
-
-В корне репозитория — [`.github/workflows/ai-review.yml`](.github/workflows/ai-review.yml): при `pull_request` (opened/synchronize) публикуется комментарий с ревью. Секреты `LMSTUDIO_*` / `LLM_SERVICE_TOKEN` опциональны; без них ответ собирается из diff и RAG.
-
-Секреты в репозиторий не кладите: `.env`, `data/connection.json` — только локально. Шаблон переменных — `Day 32/.env.example`.
-
-## Day 31 — Ассистент разработчика
-
-- **[Day 31](Day%2031/)** — снимок до выноса AI-ревью; актуальный CLI — в `dev-assistant/`.
-
-Предыдущие дни — каталоги `Day 1` … `Day 30`.
+Каждый день — отдельная папка `Day N` с кодом и README.
